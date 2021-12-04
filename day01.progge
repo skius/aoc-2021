@@ -1,0 +1,26 @@
+fn program(n: int) {
+    // n includes the executable name
+    n = n - 1;
+    let res = 0;
+    let _ = print_int(n);
+    let prev = int_arg(1);
+
+    let i = 2;
+    while i <= n {
+        let curr = int_arg(i);
+
+        if curr > prev {
+            res = res + 1;
+        }
+
+        prev = curr;
+
+        i = i + 1;
+    }
+
+    let _ = print_int(res);
+
+    return;
+}
+
+fn analyze() {return;}

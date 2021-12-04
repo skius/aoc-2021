@@ -1,0 +1,66 @@
+fn program(n: int) {
+    // n includes the executable name
+    n = n - 1;
+
+    part1(n);
+    part2(n);
+
+    return;
+}
+
+fn part1(n: int) {
+    let i = 1;
+    while i <= n {
+        let fst = int_arg(i);
+
+        let j = i + 1;
+        while j <= n {
+            let snd = int_arg(j);
+
+            if fst + snd == 2020 {
+                let _ = print_int(fst * snd);
+                return;
+            }
+
+            j = j + 1;
+        }
+
+
+        i = i + 1;
+    }
+
+    return;
+}
+
+fn part2(n: int) {
+    let i = 1;
+    while i <= n {
+        let fst = int_arg(i);
+
+        let j = i + 1;
+        while j <= n {
+            let snd = int_arg(j);
+
+            let k = j + 1;
+            while k <= n {
+                let trd = int_arg(k);
+
+                if fst + snd + trd == 2020 {
+                    let _ = print_int(fst * snd * trd);
+                    return;
+                }
+
+                k = k + 1;
+            }
+
+            j = j + 1;
+        }
+
+
+        i = i + 1;
+    }
+
+    return;
+}
+
+fn analyze() {return;}
