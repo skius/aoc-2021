@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn sample_part2() {
-        test_implementation(part2, SAMPLE, 230);
+        test_implementation(part2, SAMPLE, 1924);
     }
 }
 
