@@ -26,8 +26,8 @@ fn after_days(input: &mut dyn Read, days: usize) -> String {
         new_pop.insert(8, pop.get(&0).copied().unwrap_or(0));
         *new_pop.entry(6).or_insert(0) += pop.get(&0).copied().unwrap_or(0);
         pop = new_pop;
-        println!("After {} days:", i+1);
-        println!("{:?}\n", pop);
+        // println!("After {} days:", i+1);
+        // println!("{:?}\n", pop);
     }
 
     pop.iter().map(|(k ,v)| v).sum::<usize>().to_string()
