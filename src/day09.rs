@@ -51,7 +51,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let n = area.len();
     let m = area[0].len();
 
-    let mut visited = vec![vec![false; m as usize]; n as usize];
+    let mut visited = vec![vec![false; m]; n];
     let mut totals = vec![];
 
     for y in 0..n {
