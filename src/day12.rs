@@ -136,48 +136,39 @@ pub fn part2(input: &mut dyn Read) -> String {
     // print_adj(&adj_matrix, &idx_to_name);
     // let idx_to_name = vec![&edges[0][0]];
 
-    let mut visited = vec![0; n];
+    let mut visited = vec![false; n];
     // println!("ms since start: {}ms", SystemTime::now().duration_since(pre).unwrap().as_nanos());
 
     // visited[START] = 1;
-    let res = dfs_2(&idx_to_name, num_small, &adj_matrix, &mut visited, START).to_string();
+    let res = dfs_2(&idx_to_name, num_small, &adj_matrix, &mut visited, START, true).to_string();
 
     println!("Took: {}ms", SystemTime::now().duration_since(pre).unwrap().as_millis());
 
     res
 }
 
-fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &mut Vec<usize>, node: Node) -> usize {
-    // println!("Visiting {}", idx_to_name[node]);
-    // println!("[");
-    // for (i, vis) in visited.iter().enumerate() {
-    //     println!("{}: {}", idx_to_name[i], vis);
-    // }
-    // println!("]");
-
+// Note for solution that scales to arbitrary K revisits, see a previous commit
+fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &mut Vec<bool>, node: Node, mut can_second: bool) -> usize {
     // small caves
     if 2 <= node && node < n_small + 2 {
-        if visited[node] == 2 {
-            // no small cave may be visited more than twice
+        if visited[node] && !can_second {
+            // small_cave visited already and we don't have second try left-over
             return 0;
         }
-        // but also if there is already a small cave that's been visited twice, then this one can't be visited more than once
-        if visited.iter().take(n_small + 2).any(|&v| v == 2) && visited[node] == 1 {
-            return 0;
+        if visited[node] {
+            can_second = false;
         }
     }
     // start and end can be visited no more than once
-    if node < 2 && visited[node] == 1 {
+    if node < 2 && visited[node] {
         // can't visit start,end twice
         return 0;
     }
-    // println!("didn't abort");
     if node == END {
-        // println!("found end, returning 1");
         return 1;
     }
-
-    visited[node] += 1;
+    let prev_vis = visited[node];
+    visited[node] = true;
 
 
     let mut paths = 0;
@@ -186,7 +177,7 @@ fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &
         // let mut visited_clone = visited.clone();
 
         // let neighbor_num = dfs_2(idx_to_name, n_small, adj, &mut visited_clone, neighbor);
-        let neighbor_num = dfs_2(idx_to_name, n_small, adj, visited, neighbor);
+        let neighbor_num = dfs_2(idx_to_name, n_small, adj, visited, neighbor, can_second);
         // if neighbor_num == 0 {
         //     continue;
         // }
@@ -194,7 +185,7 @@ fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &
         paths += neighbor_num;
     }
 
-    visited[node] -= 1;
+    visited[node] = prev_vis;
 
     // println!("found paths {}\n", paths);
 
