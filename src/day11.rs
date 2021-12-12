@@ -1,5 +1,8 @@
 use std::fmt::Display;
 use std::io::{BufRead, BufReader, Read};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+const MAX: u8 = 9; // AOC is 9
 
 fn sim_flash(grid: &mut Vec<Vec<u8>>, did_flash: &mut Vec<Vec<bool>>, y: usize, x: usize) {
     assert!(!did_flash[y][x]);
@@ -25,7 +28,7 @@ fn sim_flash(grid: &mut Vec<Vec<u8>>, did_flash: &mut Vec<Vec<bool>>, y: usize, 
             let n_y = n_y as usize;
             let n_x = n_x as usize;
             grid[n_y][n_x] += 1;
-            if grid[n_y][n_x] > 9 && !did_flash[n_y][n_x] {
+            if grid[n_y][n_x] > MAX && !did_flash[n_y][n_x] {
                 sim_flash(grid, did_flash, n_y, n_x);
             }
         }
@@ -42,14 +45,14 @@ fn sim_step(grid: &mut Vec<Vec<u8>>) -> usize {
         for x in 0..grid[0].len() {
             grid[y][x] += 1;
 
-            if grid[y][x] > 9 && !did_flash[y][x] {
+            if grid[y][x] > MAX && !did_flash[y][x] {
                 // simulate neighbor's flash
                 sim_flash(grid, &mut did_flash, y, x);
             }
         }
     }
 
-    print_grid(grid);
+    // print_grid(grid);
     // println!();
 
     for y in 0..grid.len() {
@@ -68,24 +71,24 @@ fn sim_step(grid: &mut Vec<Vec<u8>>) -> usize {
 fn print_grid(grid: &Vec<Vec<u8>>) {
     print!("{}", termion::cursor::Goto(1,1));
     // print!("{}{}", termion::clear::All, termion::cursor::Goto(1,1));
-    let colors: [Box<dyn Display>; 5] = [
-        Box::new(termion::color::Bg(termion::color::Black)),
-        Box::new(termion::color::Bg(termion::color::Rgb(40,40,40))),
-        Box::new(termion::color::Bg(termion::color::Rgb(80,80,80))),
-        Box::new(termion::color::Bg(termion::color::Rgb(150,150,150))),
-        Box::new(termion::color::Bg(termion::color::Rgb(200,200,200))),
-        // Box::new(termion::color::Bg(termion::color::LightBlue)),
-        // Box::new(termion::color::Bg(termion::color::Cyan)),
-        // Box::new(termion::color::Bg(termion::color::LightGreen)),
-        // &termion::color::Bg(termion::color::Blue),
-        // &termion::color::Bg(termion::color::LightBlue),
-        // &termion::color::Bg(termion::color::LightGreen),
-        // &termion::color::Bg(termion::color::White),
-    ];
+    // let colors: [Box<dyn Display>; 5] = [
+    //     Box::new(termion::color::Bg(termion::color::Black)),
+    //     Box::new(termion::color::Bg(termion::color::Rgb(40,40,40))),
+    //     Box::new(termion::color::Bg(termion::color::Rgb(80,80,80))),
+    //     Box::new(termion::color::Bg(termion::color::Rgb(150,150,150))),
+    //     Box::new(termion::color::Bg(termion::color::Rgb(200,200,200))),
+    //     // Box::new(termion::color::Bg(termion::color::LightBlue)),
+    //     // Box::new(termion::color::Bg(termion::color::Cyan)),
+    //     // Box::new(termion::color::Bg(termion::color::LightGreen)),
+    //     // &termion::color::Bg(termion::color::Blue),
+    //     // &termion::color::Bg(termion::color::LightBlue),
+    //     // &termion::color::Bg(termion::color::LightGreen),
+    //     // &termion::color::Bg(termion::color::White),
+    // ];
     for row in grid {
         for &cell in row {
-            if cell <= 9 {
-                print!("{}  ", termion::color::Bg(termion::color::Rgb(255/10 * cell,255/10 * cell,255/10 * cell)));
+            if cell <= MAX {
+                print!("{}  ", termion::color::Bg(termion::color::Rgb(255/(MAX + 1) * cell,255/(MAX + 1) * cell,255/(MAX + 1) * cell)));
                 // print!("{}.", colors[(cell/2) as usize]);
                 // print!("{}", cell);
             } else {
@@ -95,10 +98,22 @@ fn print_grid(grid: &Vec<Vec<u8>>) {
         println!();
     }
     print!("{}", termion::color::Bg(termion::color::Reset));
-    std::thread::sleep(std::time::Duration::from_millis(150));
+    std::thread::sleep(std::time::Duration::from_millis(40));
+}
+
+fn random_grid(n: usize, m: usize) -> Vec<Vec<u8>> {
+    let n = 20;
+    let m = 30;
+    (0..n).map(|_| {
+        (0..m).map(|_| {
+            rand::random::<u8>() % (MAX + 1)
+        }).collect()
+    }).collect()
 }
 
 fn grid_from_input(input: &mut dyn Read) -> Vec<Vec<u8>> {
+
+
     BufReader::new(input)
         .lines()
         .map(|l| {
