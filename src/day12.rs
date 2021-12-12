@@ -1,4 +1,5 @@
 use std::io::{BufRead, BufReader, Read};
+use std::time::SystemTime;
 
 fn parse_input(input: &mut dyn Read) -> Vec<Vec<String>> {
     BufReader::new(input).lines().map(|line| {
@@ -18,6 +19,7 @@ type AdjMatrix = Vec<Vec<bool>>;
 type Node = usize;
 
 pub fn part1(input: &mut dyn Read) -> String {
+    // Note graph building part is not entirely correct in part1, see part2 adjustments
     let edges = parse_input(input);
     let mut small = edges.iter().flatten().filter(|s| *s == &s.to_ascii_lowercase()).collect::<Vec<_>>();
     small.dedup();
@@ -95,6 +97,7 @@ fn dfs_1(n_small: usize, adj: &AdjMatrix, visited: &mut Vec<bool>, node: Node) -
 }
 
 pub fn part2(input: &mut dyn Read) -> String {
+    let pre = SystemTime::now();
     let edges = parse_input(input);
     let mut small = edges.iter().flatten().filter(|s| *s == &s.to_ascii_lowercase()).filter(|s| *s != "start" && *s != "end").collect::<Vec<_>>();
     small.sort();
@@ -130,11 +133,18 @@ pub fn part2(input: &mut dyn Read) -> String {
     let start = "start".to_string();
     let end = "end".to_string();
     let idx_to_name = vec![vec![&start, &end], small.clone(), large.clone()].into_iter().flatten().collect::<Vec<_>>();
-    print_adj(&adj_matrix, &idx_to_name);
+    // print_adj(&adj_matrix, &idx_to_name);
+    // let idx_to_name = vec![&edges[0][0]];
 
     let mut visited = vec![0; n];
+    // println!("ms since start: {}ms", SystemTime::now().duration_since(pre).unwrap().as_nanos());
+
     // visited[START] = 1;
-    dfs_2(&idx_to_name, num_small, &adj_matrix, &mut visited, START).to_string()
+    let res = dfs_2(&idx_to_name, num_small, &adj_matrix, &mut visited, START).to_string();
+
+    println!("Took: {}ms", SystemTime::now().duration_since(pre).unwrap().as_millis());
+
+    res
 }
 
 fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &mut Vec<usize>, node: Node) -> usize {
@@ -173,15 +183,18 @@ fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &
     let mut paths = 0;
 
     for (neighbor, _) in adj[node].iter().enumerate().filter(|(_, &b)| b) {
-        let mut visited_clone = visited.clone();
+        // let mut visited_clone = visited.clone();
 
-        let neighbor_num = dfs_2(idx_to_name, n_small, adj, &mut visited_clone, neighbor);
+        // let neighbor_num = dfs_2(idx_to_name, n_small, adj, &mut visited_clone, neighbor);
+        let neighbor_num = dfs_2(idx_to_name, n_small, adj, visited, neighbor);
         // if neighbor_num == 0 {
         //     continue;
         // }
 
         paths += neighbor_num;
     }
+
+    visited[node] -= 1;
 
     // println!("found paths {}\n", paths);
 
