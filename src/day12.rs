@@ -96,6 +96,8 @@ fn dfs_1(n_small: usize, adj: &AdjMatrix, visited: &mut Vec<bool>, node: Node) -
     paths
 }
 
+type AdjList = Vec<Vec<Node>>;
+
 pub fn part2(input: &mut dyn Read) -> String {
     let pre = SystemTime::now();
     let edges = parse_input(input);
@@ -108,7 +110,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let num_small = small.len();
     let num_large = large.len();
     let n = num_small + num_large + 2;
-    let mut adj_matrix = vec![vec![false; n]; n];
+    let mut adj_matrix = vec![vec![0; 0]; n];
 
 
     for edge in &edges {
@@ -126,13 +128,13 @@ pub fn part2(input: &mut dyn Read) -> String {
             s => large.iter().position(|name| *name == s).unwrap() + 2 + num_small,
         };
 
-        adj_matrix[idx_src][idx_target] = true;
-        adj_matrix[idx_target][idx_src] = true;
+        adj_matrix[idx_src].push(idx_target);
+        adj_matrix[idx_target].push(idx_src);
     }
 
-    let start = "start".to_string();
-    let end = "end".to_string();
-    let idx_to_name = vec![vec![&start, &end], small.clone(), large.clone()].into_iter().flatten().collect::<Vec<_>>();
+    // let start = "start".to_string();
+    // let end = "end".to_string();
+    // let idx_to_name = vec![vec![&start, &end], small.clone(), large.clone()].into_iter().flatten().collect::<Vec<_>>();
     // print_adj(&adj_matrix, &idx_to_name);
     // let idx_to_name = vec![&edges[0][0]];
 
@@ -140,7 +142,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     // println!("ms since start: {}ms", SystemTime::now().duration_since(pre).unwrap().as_nanos());
 
     // visited[START] = 1;
-    let res = dfs_2(&idx_to_name, num_small, &adj_matrix, &mut visited, START, true).to_string();
+    let res = dfs_2(num_small, &adj_matrix, &mut visited, START, true).to_string();
 
     println!("Took: {}ms", SystemTime::now().duration_since(pre).unwrap().as_millis());
 
@@ -148,46 +150,34 @@ pub fn part2(input: &mut dyn Read) -> String {
 }
 
 // Note for solution that scales to arbitrary K revisits, see a previous commit
-fn dfs_2(idx_to_name: &Vec<&String>, n_small: usize, adj: &AdjMatrix, visited: &mut Vec<bool>, node: Node, mut can_second: bool) -> usize {
+fn dfs_2(n_small: usize, adj: &AdjList, visited: &mut Vec<bool>, node: Node, mut can_second: bool) -> usize {
     // small caves
     if 2 <= node && node < n_small + 2 {
-        if visited[node] && !can_second {
-            // small_cave visited already and we don't have second try left-over
-            return 0;
-        }
         if visited[node] {
+            if !can_second {
+                // small_cave visited already and we don't have second try left-over
+                return 0;
+            }
             can_second = false;
         }
     }
     // start and end can be visited no more than once
-    if node < 2 && visited[node] {
-        // can't visit start,end twice
+    else if node == START && visited[node] {
+        // can't visit start twice
         return 0;
     }
-    if node == END {
+    else if node == END {
         return 1;
     }
+
+    // Store to reset later
     let prev_vis = visited[node];
     visited[node] = true;
 
+    let paths = adj[node].iter().map(|&neighbor| dfs_2(n_small, adj, visited, neighbor, can_second)).sum();
 
-    let mut paths = 0;
-
-    for (neighbor, _) in adj[node].iter().enumerate().filter(|(_, &b)| b) {
-        // let mut visited_clone = visited.clone();
-
-        // let neighbor_num = dfs_2(idx_to_name, n_small, adj, &mut visited_clone, neighbor);
-        let neighbor_num = dfs_2(idx_to_name, n_small, adj, visited, neighbor, can_second);
-        // if neighbor_num == 0 {
-        //     continue;
-        // }
-
-        paths += neighbor_num;
-    }
-
+    // reset previous state
     visited[node] = prev_vis;
-
-    // println!("found paths {}\n", paths);
 
     paths
 }
