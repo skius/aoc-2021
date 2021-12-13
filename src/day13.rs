@@ -7,6 +7,8 @@ fn process_fold(fold: (u8, usize), grid: &Vec<(usize, usize)>) -> Vec<(usize, us
     //     |(x, y)| y
     // };
 
+    // println!("Processing fold: {},{}", fold.0, fold.1);
+
     let mut result = vec![];
 
     for &(x, y) in grid {
@@ -33,6 +35,7 @@ fn process_fold(fold: (u8, usize), grid: &Vec<(usize, usize)>) -> Vec<(usize, us
 fn read_input(input: &mut dyn Read) -> (Vec<(usize, usize)>, Vec<(u8, usize)>) {
     let mut res = String::new();
     input.read_to_string(&mut res);
+    let mut res = res.trim().to_string();
 
     let res = res.replace("\r", "");
     let parts = res.split("\n\n").collect::<Vec<_>>();
