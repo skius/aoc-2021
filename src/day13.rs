@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::{thread, time};
 
 fn process_fold(fold: (u8, usize), grid: &Vec<(usize, usize)>) -> Vec<(usize, usize)> {
     // let coord = if fold.0 == 0 {
@@ -104,6 +105,7 @@ fn print_grid(grid: &Vec<(usize, usize)>) {
 
     for row in hard_coded_grid {
         println!("{}", row.into_iter().collect::<String>());
+        // thread::sleep(time::Duration::from_millis(100));
     }
 }
 
