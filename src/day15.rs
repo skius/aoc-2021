@@ -1,3 +1,4 @@
+use std::cmp::Reverse;
 use std::collections::{BinaryHeap, HashMap, VecDeque};
 use std::io::{BufRead, BufReader, Read};
 
@@ -50,7 +51,7 @@ pub fn part1(input: &mut dyn Read) -> String {
 }
 
 fn adjacents(cave: &Vec<Vec<u8>>, x: usize, y: usize) -> impl Iterator<Item = (usize, usize)> {
-    let mut res = vec![];
+    let mut res = Vec::with_capacity(4);
     if 0 < x {
         res.push((x - 1, y));
     }
@@ -106,6 +107,8 @@ pub fn part2(input: &mut dyn Read) -> String {
             .map(|c| c as u8 - b'0')
             .collect::<Vec<u8>>();
 
+        row.reserve(row.len() * 4);
+
         let original_len = row.len();
 
         // 4 copies
@@ -124,6 +127,8 @@ pub fn part2(input: &mut dyn Read) -> String {
             row
         );
     }
+
+    cave.reserve(cave.len() * 4);
 
     let original_height = cave.len();
     for copy in 1..=4 {
@@ -149,36 +154,30 @@ pub fn part2(input: &mut dyn Read) -> String {
     //     // println!("{:?}", row);
     // }
 
-    let mut memo: HashMap<(usize, usize), usize> = HashMap::new();
-
     let target_x = cave[0].len() - 1;
     let target_y = cave.len() - 1;
 
-
-    let mut costs: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut costs: HashMap<(usize, usize), usize> = HashMap::with_capacity(cave.len() * cave[0].len());
     costs.insert((0, 0), 0);
-    let mut worklist = VecDeque::new();
-    worklist.extend([(0,1), (1,0)]);
+    let mut worklist = BinaryHeap::with_capacity(cave.len() + cave[0].len());
+    worklist.push((Reverse(0), (0,0)));
 
     while !worklist.is_empty() {
-        let (curr_x, curr_y) = worklist.pop_front().unwrap();
-        let curr_cost = *costs.get(&(curr_x, curr_y)).unwrap_or(&usize::MAX);
+        let (Reverse(curr_cost), (curr_x, curr_y)) = worklist.pop().unwrap();
 
-        let mut new_cost = cave[curr_y][curr_x] as usize;
-        // add minimum of surrounding costs
+        // if (curr_x, curr_y) == (target_x, target_y) {
+        //     return curr_cost.to_string();
+        // }
 
-        new_cost += adjacents(&cave, curr_x, curr_y).map(|(x, y)| {
-            *costs.get(&(x, y)).unwrap_or(&usize::MAX)
-        }).min().unwrap();
-
-        if new_cost < curr_cost {
-            // println!("Decreasing cost from {} to {}, coords: ({},{})", curr_cost, new_cost, curr_x, curr_y);
-
-            costs.insert((curr_x, curr_y), new_cost);
-            for (new_x, new_y) in adjacents(&cave, curr_x, curr_y) {
-                worklist.push_back((new_x, new_y));
+        for (new_x, new_y) in adjacents(&cave, curr_x, curr_y) {
+            let old_cost = *costs.get(&(new_x, new_y)).unwrap_or(&usize::MAX);
+            let new_cost = curr_cost + cave[new_y][new_x] as usize;
+            if new_cost < old_cost {
+                worklist.push((Reverse(new_cost), (new_x, new_y)));
+                costs.insert((new_x, new_y), new_cost);
             }
         }
+
     }
 
     costs[&(target_x, target_y)].to_string()
@@ -212,6 +211,6 @@ mod tests {
 
     #[test]
     fn real_part2() {
-        test_implementation(part2, REAL, 562);
+        test_implementation(part2, REAL, 2874);
     }
 }
