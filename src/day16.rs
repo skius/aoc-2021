@@ -163,21 +163,39 @@ pub fn part1(input: &mut dyn Read) -> String {
 
 pub fn part2(input: &mut dyn Read) -> String {
     let mut buf = BufReader::new(input);
-    let mut res = String::new();
-    buf.read_to_string(&mut res);
+    let mut res = Vec::new();
+    buf.read_to_end(&mut res);
 
     let mut bits = vec![];
 
     let pre = Instant::now();
 
-    for c in res.chars() {
-        bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
-            .chars()
-            .map(|c| c.to_digit(10).unwrap() as u8));
-            // .map(|c| c == '1'));
+    for b in res {
+        match b {
+            b'0'..=b'9' => {
+                let val = b - b'0';
+                for i in (0..4).rev() {
+                    bits.push(((val & (1 << i)) != 0) as u8);
+                    // bits.push(((val & (1 << i)) == 1));
+                }
+
+            },
+            b'A'..=b'F' => {
+                let val = b - b'A' + 10;
+                for i in (0..4).rev() {
+                    bits.push(((val & (1 << i)) != 0) as u8);
+                    // bits.push(((val & (1 << i)) == 1));
+                }
+            },
+            _ => panic!(),
+        }
+        // bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
+        //     .chars()
+        //     // .map(|c| c.to_digit(10).unwrap() as u8));
+        //     .map(|c| c == '1'));
     }
 
-    println!("{:?}", pre.elapsed());
+    // println!("{:?}", pre.elapsed());
 
     // println!("{:?}", bits);
     // println!("{:?}", bits.len());
@@ -187,6 +205,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     // println!("{:?}", rem);
 
     packet.eval().to_string()
+    // String::new()
 }
 
 
