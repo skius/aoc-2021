@@ -47,7 +47,7 @@ impl Packet {
     }
 }
 
-fn bits_to_num(bits: &[u8]) -> u64 {
+fn bits_to_num(bits: &[bool]) -> u64 {
     let mut num = 0;
     for bit in bits {
         num = num << 1;
@@ -56,10 +56,10 @@ fn bits_to_num(bits: &[u8]) -> u64 {
     num
 }
 
-fn parse_literal(mut bits: &[u8]) -> (u64, &[u8]) {
+fn parse_literal(mut bits: &[bool]) -> (u64, &[bool]) {
     let mut num = 0;
 
-    while bits[0] == 1 {
+    while bits[0] {
         num = num << 4;
         num += bits_to_num(&bits[1..5]) as u64;
         bits = &bits[5..];
@@ -85,7 +85,7 @@ fn parse_literal(mut bits: &[u8]) -> (u64, &[u8]) {
 }
 
 // returns packet and remaining bits
-fn parse_packet(mut bits: &[u8]) -> (Packet, &[u8]) {
+fn parse_packet(mut bits: &[bool]) -> (Packet, &[bool]) {
     let version = bits_to_num(&bits[0..3]) as u8;
     bits = &bits[3..];
     // println!("Parsing packet version {}", version);
@@ -98,7 +98,7 @@ fn parse_packet(mut bits: &[u8]) -> (Packet, &[u8]) {
     } else {
         let length_type_id = bits[0];
         bits = &bits[1..];
-        if length_type_id == 0 {
+        if length_type_id as u8 == 0 {
             let mut total_subpacket_length = bits_to_num(&bits[0..15]) as usize;
             bits = &bits[15..];
             let mut subpacket_bits = &bits[0..total_subpacket_length];
@@ -139,26 +139,27 @@ fn parse_packet(mut bits: &[u8]) -> (Packet, &[u8]) {
 }
 
 pub fn part1(input: &mut dyn Read) -> String {
-    let mut buf = BufReader::new(input);
-    let mut res = String::new();
-    buf.read_to_string(&mut res);
-
-    let mut bits = vec![];
-
-    for c in res.chars() {
-        bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
-            .chars()
-            .map(|c| c.to_digit(10).unwrap() as u8));
-    }
-
-    println!("{:?}", bits);
-    println!("{:?}", bits.len());
-
-    let (packet, rem) = parse_packet(&bits);
-    // println!("{:#?}", packet);
-    // println!("{:?}", rem);
-
-    packet.sum_versions().to_string()
+    // let mut buf = BufReader::new(input);
+    // let mut res = String::new();
+    // buf.read_to_string(&mut res);
+    //
+    // let mut bits = vec![];
+    //
+    // for c in res.chars() {
+    //     bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
+    //         .chars()
+    //         .map(|c| c.to_digit(10).unwrap() as u8));
+    // }
+    //
+    // println!("{:?}", bits);
+    // println!("{:?}", bits.len());
+    //
+    // let (packet, rem) = parse_packet(&bits);
+    // // println!("{:#?}", packet);
+    // // println!("{:?}", rem);
+    //
+    // packet.sum_versions().to_string()
+    "".to_string()
 }
 
 pub fn part2(input: &mut dyn Read) -> String {
@@ -166,7 +167,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut res = Vec::new();
     buf.read_to_end(&mut res);
 
-    let mut bits = vec![];
+    let mut bits = Vec::with_capacity(6000);
 
     let pre = Instant::now();
 
@@ -175,7 +176,8 @@ pub fn part2(input: &mut dyn Read) -> String {
             b'0'..=b'9' => {
                 let val = b - b'0';
                 for i in (0..4).rev() {
-                    bits.push(((val & (1 << i)) != 0) as u8);
+                    // bits.push(((val & (1 << i)) != 0) as u8);
+                    bits.push(((val & (1 << i)) != 0));
                     // bits.push(((val & (1 << i)) == 1));
                 }
 
@@ -183,7 +185,8 @@ pub fn part2(input: &mut dyn Read) -> String {
             b'A'..=b'F' => {
                 let val = b - b'A' + 10;
                 for i in (0..4).rev() {
-                    bits.push(((val & (1 << i)) != 0) as u8);
+                    // bits.push(((val & (1 << i)) != 0) as u8);
+                    bits.push(((val & (1 << i)) != 0));
                     // bits.push(((val & (1 << i)) == 1));
                 }
             },
@@ -246,13 +249,13 @@ mod tests {
         test_implementation(part1, REAL, 879);
     }
 
-    #[test]
-    fn sample_part2() {
-        test_implementation(part2, SAMPLE, 315);
-    }
+    // #[test]
+    // fn sample_part2() {
+    //     test_implementation(part2, SAMPLE, 315);
+    // }
 
     #[test]
     fn real_part2() {
-        test_implementation(part2, REAL, 539051801941);
+        test_implementation(part2, REAL, 539051801941usize);
     }
 }
