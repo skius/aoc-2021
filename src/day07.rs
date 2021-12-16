@@ -8,7 +8,7 @@ pub fn part1(input: &mut dyn Read) -> String {
     let sum: usize = positions.iter().sum();
     let avg = (sum as f64) / (positions.len() as f64);
     let avg = avg.round() as usize;
-    println!("avg: {}", avg);
+    // println!("avg: {}", avg);
 
     let mut total = usize::MAX;
 
@@ -32,7 +32,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let sum: usize = positions.iter().sum();
     let avg = (sum as f64) / (positions.len() as f64);
     let avg = avg.round() as usize;
-    println!("avg: {}", avg);
+    // println!("avg: {}", avg);
 
     let mut total = usize::MAX;
 

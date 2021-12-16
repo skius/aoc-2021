@@ -14,8 +14,8 @@ fn after_days(input: &mut dyn Read, days: usize) -> String {
     for timer in &timers {
         *pop.entry(*timer).or_insert(0) += 1;
     }
-    println!("timers: {:?}", &timers);
-    println!("In the beginning (before day 1):\n{:?}", pop);
+    // println!("timers: {:?}", &timers);
+    // println!("In the beginning (before day 1):\n{:?}", pop);
 
     for i in 0..days {
         let mut new_pop: HashMap<usize, usize> = HashMap::new();

@@ -63,7 +63,7 @@ fn print_adj(adj: &AdjMatrix, idx_to_name: &Vec<&String>) {
     for (i, row) in adj.iter().enumerate() {
         for (j, col) in row.iter().enumerate() {
             if *col && i <= j {
-                println!("{} -> {}", idx_to_name[i], idx_to_name[j]);
+                // println!("{} -> {}", idx_to_name[i], idx_to_name[j]);
             }
         }
     }
@@ -144,7 +144,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     // visited[START] = 1;
     let res = dfs_2(num_small, &adj_matrix, &mut visited, START, true).to_string();
 
-    println!("Took: {}ms", SystemTime::now().duration_since(pre).unwrap().as_millis());
+    // println!("Took: {}ms", SystemTime::now().duration_since(pre).unwrap().as_millis());
 
     res
 }

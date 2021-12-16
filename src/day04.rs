@@ -11,11 +11,11 @@ pub fn part1(input: &mut dyn Read) -> String {
     let mut boards = Vec::<[[usize; 5]; 5]>::new();
 
     while let Some(line) = lines.peek() {
-        println!("");
+        // println!("");
         let mut board = [[300; 5]; 5];
         for row in 0..5 {
             let line = lines.next().unwrap().unwrap();
-            println!("line: {}", line);
+            // println!("line: {}", line);
             for (col, num) in line.split_whitespace().enumerate() {
                 board[row][col] = num.parse::<usize>().unwrap();
             }
@@ -26,7 +26,7 @@ pub fn part1(input: &mut dyn Read) -> String {
         lines.next().unwrap();
     }
 
-    println!("{:?}", boards);
+    // println!("{:?}", boards);
 
     for pick in order {
         boards = boards.into_iter().map(|mut board| {
@@ -41,7 +41,7 @@ pub fn part1(input: &mut dyn Read) -> String {
             board
         }).collect();
 
-        println!("after pick {} boards look like this:\n{:?}\n", pick, boards);
+        // println!("after pick {} boards look like this:\n{:?}\n", pick, boards);
 
         if let Some((unpicked_sum, _winner_board)) = find_winner(&boards) {
             return (unpicked_sum * pick).to_string();
@@ -68,7 +68,7 @@ fn find_winner(boards: &Vec<[[usize; 5]; 5]>) -> Option<(usize, &[[usize; 5]; 5]
         false
     })?;
 
-    println!("winner board: {:?}", winner_board);
+    // println!("winner board: {:?}", winner_board);
 
     let sum = winner_board.iter().flatten().filter(|num| **num < 100).sum::<usize>();
 
@@ -103,11 +103,11 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut boards = Vec::<[[usize; 5]; 5]>::new();
 
     while let Some(line) = lines.peek() {
-        println!("");
+        // println!("");
         let mut board = [[300; 5]; 5];
         for row in 0..5 {
             let line = lines.next().unwrap().unwrap();
-            println!("line: {}", line);
+            // println!("line: {}", line);
             for (col, num) in line.split_whitespace().enumerate() {
                 board[row][col] = num.parse::<usize>().unwrap();
             }
@@ -118,7 +118,7 @@ pub fn part2(input: &mut dyn Read) -> String {
         lines.next().unwrap();
     }
 
-    println!("{:?}", boards);
+    // println!("{:?}", boards);
 
     for pick in order {
         boards = boards.into_iter().map(|mut board| {
@@ -133,7 +133,7 @@ pub fn part2(input: &mut dyn Read) -> String {
             board
         }).collect();
 
-        println!("after pick {} boards look like this:\n{:?}\n", pick, boards);
+        //println!("after pick {} boards look like this:\n{:?}\n", pick, boards);
 
         let sum = boards[0].iter().flatten().filter(|num| **num < 100).sum::<usize>();
         boards = remove_all_winners(boards);

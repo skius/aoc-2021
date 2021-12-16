@@ -18,7 +18,7 @@ pub fn part1(input: &mut dyn Read) -> String {
 
         for display in &output_displays {
             let n = display.len();
-            println!("display: {}, length: {}", display, n);
+            // println!("display: {}, length: {}", display, n);
 
             if n == 2 || n == 3 || n == 4 || n == 7 {
                 total += 1;

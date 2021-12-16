@@ -1,3 +1,4 @@
+use std::hint::unreachable_unchecked;
 use std::io::{BufReader, Read};
 use std::time::Instant;
 
@@ -40,6 +41,7 @@ impl Packet {
                     7 => {
                         (packets[0].eval() == packets[1].eval()) as u64
                     },
+                    // _ => unsafe {unreachable_unchecked()},
                     _ => panic!("Unknown type_id: {}", self.type_id),
                 }
             }
@@ -138,38 +140,13 @@ fn parse_packet(mut bits: &[bool]) -> (Packet, &[bool]) {
     )
 }
 
-pub fn part1(input: &mut dyn Read) -> String {
-    // let mut buf = BufReader::new(input);
-    // let mut res = String::new();
-    // buf.read_to_string(&mut res);
-    //
-    // let mut bits = vec![];
-    //
-    // for c in res.chars() {
-    //     bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
-    //         .chars()
-    //         .map(|c| c.to_digit(10).unwrap() as u8));
-    // }
-    //
-    // println!("{:?}", bits);
-    // println!("{:?}", bits.len());
-    //
-    // let (packet, rem) = parse_packet(&bits);
-    // // println!("{:#?}", packet);
-    // // println!("{:?}", rem);
-    //
-    // packet.sum_versions().to_string()
-    "".to_string()
-}
-
-pub fn part2(input: &mut dyn Read) -> String {
+fn bits_from_input(input: &mut dyn Read) -> Vec<bool> {
     let mut buf = BufReader::new(input);
-    let mut res = Vec::new();
+    let mut res = Vec::with_capacity(1400);
     buf.read_to_end(&mut res);
 
     let mut bits = Vec::with_capacity(6000);
 
-    let pre = Instant::now();
 
     for b in res {
         match b {
@@ -190,7 +167,8 @@ pub fn part2(input: &mut dyn Read) -> String {
                     // bits.push(((val & (1 << i)) == 1));
                 }
             },
-            _ => panic!(),
+            // _ => unsafe {unreachable_unchecked()},
+            _ => panic!("Invalid input {}", b),
         }
         // bits.extend(format!("{:04b}", c.to_digit(16).unwrap())
         //     .chars()
@@ -198,7 +176,11 @@ pub fn part2(input: &mut dyn Read) -> String {
         //     .map(|c| c == '1'));
     }
 
-    // println!("{:?}", pre.elapsed());
+    bits
+}
+
+pub fn part1(input: &mut dyn Read) -> String {
+    let bits = bits_from_input(input);
 
     // println!("{:?}", bits);
     // println!("{:?}", bits.len());
@@ -207,7 +189,29 @@ pub fn part2(input: &mut dyn Read) -> String {
     // println!("{:#?}", packet);
     // println!("{:?}", rem);
 
-    packet.eval().to_string()
+    packet.sum_versions().to_string()
+}
+
+pub fn part2(input: &mut dyn Read) -> String {
+    // let pre = Instant::now();
+    let bits = bits_from_input(input);
+    // println!("Read time: {:?}", pre.elapsed());
+
+    // println!("{:?}", bits);
+    // println!("{:?}", bits.len());
+
+    // let pre = Instant::now();
+    let (packet, rem) = parse_packet(&bits);
+    // println!("Parse time: {:?}", pre.elapsed());
+
+    // println!("{:#?}", packet);
+    // println!("{:?}", rem);
+
+    // let pre = Instant::now();
+    let res = packet.eval();
+    // println!("Eval time: {:?}", pre.elapsed());
+
+    res.to_string()
     // String::new()
 }
 

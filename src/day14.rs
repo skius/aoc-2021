@@ -21,7 +21,7 @@ pub fn part1(input: &mut dyn Read) -> String {
     for i in 0..10 {
         // did_change = false;
         // Single step
-        println!("Processing step {}", i);
+        // println!("Processing step {}", i);
 
         let mut new_polymer = String::new();
         let mut polymer_vec = polymer.chars().collect::<Vec<_>>();
@@ -40,7 +40,7 @@ pub fn part1(input: &mut dyn Read) -> String {
         }
         new_polymer.push(*polymer_vec.last().unwrap());
 
-        println!("Replacing\n{}\nwith\n{}", polymer, new_polymer);
+        // println!("Replacing\n{}\nwith\n{}", polymer, new_polymer);
 
         polymer = new_polymer;
 

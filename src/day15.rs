@@ -9,7 +9,7 @@ pub fn part1(input: &mut dyn Read) -> String {
 
     for line in reader.lines() {
         let line = line.unwrap();
-        println!("{}", line);
+        //println!("{}", line);
         cave.push(
             line.chars()
                 .map(|c| c as u8 - b'0')

@@ -104,7 +104,7 @@ fn print_grid(grid: &Vec<(usize, usize)>) {
     }
 
     for row in hard_coded_grid {
-        println!("{}", row.into_iter().collect::<String>());
+        // println!("{}", row.into_iter().collect::<String>());
         // thread::sleep(time::Duration::from_millis(100));
     }
 }

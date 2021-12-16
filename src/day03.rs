@@ -60,13 +60,13 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut bit_idx = 0;
 
     while bits.len() > 1 {
-        println!("oxygen stuff: {:?}", bits);
+        // println!("oxygen stuff: {:?}", bits);
 
         let sum = bits.iter()
             .map(|v| v[bit_idx])
             .sum::<usize>();
 
-        println!("sum: {}", sum);
+        // println!("sum: {}", sum);
 
         let keep = if sum > (bits.len() - 1)/2 {
             // keep ones
@@ -82,7 +82,7 @@ pub fn part2(input: &mut dyn Read) -> String {
 
     let oxygen = u64::from_str_radix(&bits[0].iter().map(|&b| b.to_string()).collect::<String>(), 2).unwrap();
 
-    println!("oxygen: {}, binary: {}", oxygen, &bits[0].iter().map(|&b| b.to_string()).collect::<String>());
+    // println!("oxygen: {}, binary: {}", oxygen, &bits[0].iter().map(|&b| b.to_string()).collect::<String>());
 
 
     let mut bits = bits_orig.clone();
@@ -90,7 +90,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut bit_idx = 0;
 
     while bits.len() > 1 {
-        println!("co2 stuff: {:?}", bits);
+        // println!("co2 stuff: {:?}", bits);
 
         let sum = bits.iter()
             .map(|v| v[bit_idx])
@@ -109,7 +109,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     }
 
     let co2 = u64::from_str_radix(&bits[0].iter().map(|&b| b.to_string()).collect::<String>(), 2).unwrap();
-    println!("co2: {}, binary: {}", co2, &bits[0].iter().map(|&b| b.to_string()).collect::<String>());
+    // println!("co2: {}, binary: {}", co2, &bits[0].iter().map(|&b| b.to_string()).collect::<String>());
 
     (oxygen * co2).to_string()
 }

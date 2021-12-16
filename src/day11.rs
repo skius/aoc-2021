@@ -95,7 +95,7 @@ fn print_grid(grid: &Vec<Vec<u8>>) {
                 print!("{}  ", termion::color::Bg(termion::color::Yellow));
             }
         }
-        println!();
+        // println!();
     }
     print!("{}", termion::color::Bg(termion::color::Reset));
     std::thread::sleep(std::time::Duration::from_millis(40));
@@ -139,7 +139,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut grid = grid_from_input(input);
 
     // clear grid
-    print!("{}", termion::clear::All);
+    // print!("{}", termion::clear::All);
 
     // Not really used here
     let mut steps = 0;
