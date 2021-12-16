@@ -158,7 +158,6 @@ pub fn part2(input: &mut dyn Read) -> String {
     let target_y = cave.len() - 1;
 
     let mut costs: HashMap<(usize, usize), usize> = HashMap::with_capacity(cave.len() * cave[0].len());
-    costs.insert((0, 0), 0);
     let mut worklist = BinaryHeap::with_capacity(cave.len() + cave[0].len());
     worklist.push((Reverse(0), (0,0)));
 
@@ -169,12 +168,19 @@ pub fn part2(input: &mut dyn Read) -> String {
         //     return curr_cost.to_string();
         // }
 
-        for (new_x, new_y) in adjacents(&cave, curr_x, curr_y) {
-            let old_cost = *costs.get(&(new_x, new_y)).unwrap_or(&usize::MAX);
-            let new_cost = curr_cost + cave[new_y][new_x] as usize;
-            if new_cost < old_cost {
-                worklist.push((Reverse(new_cost), (new_x, new_y)));
-                costs.insert((new_x, new_y), new_cost);
+        /*
+        555
+        -94444444
+        888888888
+        111111111
+         */
+
+        for (neighbor_x, neighbor_y) in adjacents(&cave, curr_x, curr_y) {
+            let old_neighbor_cost = *costs.get(&(neighbor_x, neighbor_y)).unwrap_or(&usize::MAX);
+            let new_neighbor_cost = curr_cost + cave[neighbor_y][neighbor_x] as usize;
+            if new_neighbor_cost < old_neighbor_cost {
+                worklist.push((Reverse(new_neighbor_cost), (neighbor_x, neighbor_y)));
+                costs.insert((neighbor_x, neighbor_y), new_neighbor_cost);
             }
         }
 
