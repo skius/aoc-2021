@@ -3,7 +3,7 @@ use std::io::{BufRead, BufReader, Read};
 use std::iter::Peekable;
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[derive(Clone)]
 enum Value {
@@ -21,19 +21,19 @@ impl Value {
         }
     }
 
-    fn find_first_right(&mut self) -> Option<&mut Value> {
+    fn find_first_left(&mut self) -> Option<&mut Value> {
         match self {
             Value::Pair(p) => {
-                p.deref_mut().0.find_first_right()
+                p.deref_mut().0.find_first_left()
             }
             Value::Number(_) => Some(self),
         }
     }
 
-    fn find_first_left(&mut self) -> Option<&mut Value> {
+    fn find_first_right(&mut self) -> Option<&mut Value> {
         match self {
             Value::Pair(p) => {
-                p.deref_mut().1.find_first_left()
+                p.deref_mut().1.find_first_right()
             }
             Value::Number(_) => Some(self),
         }
@@ -43,16 +43,16 @@ impl Value {
         if depth == 4 {
             if let Value::Pair(p) = self {
                 // explode
-                let Pair(left, right) = *p.deref().clone();
+                let Pair(left, right) = &**p;
                 let left = left.force_number();
                 let right = right.force_number();
 
                 // add left to left_regular_number
-                if let Some(Value::Number(num)) = left_num {
-                    *num += left;
+                if let Some(Value::Number(left_num)) = left_num {
+                    *left_num += left;
                 }
-                if let Some(Value::Number(num)) = right_num {
-                    *num += right;
+                if let Some(Value::Number(right_num)) = right_num {
+                    *right_num += right;
                 }
 
                 *self = Value::Number(0);
@@ -64,10 +64,10 @@ impl Value {
 
         if let Value::Pair(ref mut inner) = self {
             let pair = inner.deref_mut();
-            if pair.0.explode(depth + 1, left_num, pair.1.find_first_right()) {
+            if pair.0.explode(depth + 1, left_num, pair.1.find_first_left()) {
                 return true;
             }
-            if pair.1.explode(depth + 1, pair.0.find_first_left(), right_num) {
+            if pair.1.explode(depth + 1, pair.0.find_first_right(), right_num) {
                 return true;
             }
         }
@@ -85,7 +85,8 @@ impl Value {
                 if right.split() {
                     return true;
                 }
-                return false;
+
+                false
             }
             Value::Number(num) => {
                 if *num < 10 {
@@ -95,7 +96,8 @@ impl Value {
                 let new_left = Value::Number(*num / 2);
                 let new_right = Value::Number((*num + 1) / 2);
                 *self = Value::Pair(Box::new(Pair(new_left, new_right)));
-                return true;
+
+                true
             }
         }
     }
@@ -120,7 +122,7 @@ impl Value {
         match self {
             Value::Number(n) => *n,
             Value::Pair(p) => {
-                let Pair(left, right) = p.deref();
+                let Pair(left, right) = &**p;
                 3 * left.magnitude() + 2 * right.magnitude()
             }
         }
@@ -146,6 +148,7 @@ impl Debug for Pair {
     }
 }
 
+// TODO: everything should be unsigned, or I should handle negative things here
 fn parse_number(s: &mut Peekable<impl Iterator<Item = char>>) -> i64 {
     let mut result = 0;
     while let Some(c) = s.peek() {
@@ -187,12 +190,16 @@ impl FromStr for Pair {
     }
 }
 
-pub fn part1(input: &mut dyn Read) -> String {
+fn pairs_from_input(input: &mut dyn Read) -> Vec<Value> {
     let mut buf = BufReader::new(input);
-    let pairs = buf.lines().map(|l| {
+    buf.lines().map(|l| {
         let line = l.unwrap();
         Value::Pair(Box::new(line.parse().unwrap()))
-    }).collect::<Vec<Value>>();
+    }).collect()
+}
+
+pub fn part1(input: &mut dyn Read) -> String {
+    let pairs = pairs_from_input(input);
 
     // println!("{:#?}", pairs);
 
@@ -209,24 +216,35 @@ pub fn part1(input: &mut dyn Read) -> String {
 
 pub fn part2(input: &mut dyn Read) -> String {
     // let pre = Instant::now();
-    let mut buf = BufReader::new(input);
-    let pairs = buf.lines().map(|l| {
-        let line = l.unwrap();
-        Value::Pair(Box::new(line.parse().unwrap()))
-    }).collect::<Vec<Value>>();
+    let pairs = pairs_from_input(input);
     // println!("Parsed input in {:?}", pre.elapsed());
 
     // let pre = Instant::now();
+
+    // let mut add_duration = Duration::from_micros(0);
+    // let mut reduce_duration = Duration::from_micros(0);
+
     let mut max = 0;
     for p1_i in 0..pairs.len() {
         for p2_i in 0..pairs.len() {
             if p1_i == p2_i {
                 continue;
             }
+
+            // let pre = Instant::now();
             let p1 = pairs[p1_i].clone();
             let p2 = pairs[p2_i].clone();
             let mut sum = p1.add(p2);
+            // let add_elapsed = pre.elapsed();
+            // add_duration += add_elapsed;
+            // println!("Added in {:?}", add_elapsed);
+
+            // let pre = Instant::now();
             sum.reduce();
+            // let reduce_elapsed = pre.elapsed();
+            // reduce_duration += reduce_elapsed;
+            // println!("Reduced in {:?}", reduce_elapsed);
+
             let magn = sum.magnitude();
             if magn > max {
                 max = magn;
@@ -235,6 +253,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     }
     // println!("Found max in {:?}", pre.elapsed());
 
+    // println!("add: {:?}, reduce: {:?}", add_duration, reduce_duration);
 
     max.to_string()
 }

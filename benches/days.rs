@@ -23,7 +23,7 @@ fn read_input(day: usize) -> Vec<u8> {
 
 pub fn benchmark_days(c: &mut Criterion) {
     // for day in 1..=DAYS_IMPLEMENTED {
-    for day in (DAYS_IMPLEMENTED-2)..=DAYS_IMPLEMENTED {
+    for day in (DAYS_IMPLEMENTED-0)..=DAYS_IMPLEMENTED {
         let input = read_input(day);
 
         let part1 = get_implementation(day, false);
