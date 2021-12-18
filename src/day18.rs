@@ -62,7 +62,7 @@ impl Value {
             return false;
         }
 
-        if let Value::Pair(ref mut inner) = self {
+        if let Value::Pair(inner) = self {
             let pair = inner.deref_mut();
             if pair.0.explode(depth + 1, left_num, pair.1.find_first_left()) {
                 return true;
