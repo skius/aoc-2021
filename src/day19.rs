@@ -46,6 +46,12 @@ impl Position {
         Position { x, y, z }
     }
 
+    fn distance(self, other: Position) -> usize {
+        (self.x - other.x).abs() as usize
+            + (self.y - other.y).abs() as usize
+            + (self.z - other.z).abs() as usize
+    }
+
     // These rotations might actually all be counter-clockwise, but I'm not sure
     // Rotate around the x-axis clock-wise in 90 degree steps
     fn rotate_x(self, times: u8) -> Position {
@@ -262,7 +268,7 @@ pub fn part1(input: &mut dyn Read) -> String {
             // Check if scanners overlap
             let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
             println!("overlapping: {}", num);
-            if let Some((_, new_normalized)) = relative_pos {
+            if let Some((new_offset, new_normalized)) = relative_pos {
                 normalized_scanner_final.extend(new_normalized);
                 // normalized_scanners.push(new_normalized);
                 scanners_to_normalize.remove(i);
@@ -291,7 +297,79 @@ pub fn part1(input: &mut dyn Read) -> String {
 }
 
 pub fn part2(input: &mut dyn Read) -> String {
-    todo!()
+    let scanners = read_input(input);
+    // println!("{:#?}", scanners);
+
+    let scanner0 = scanners[0].clone();
+    // println!("{:#?}", scanner0);
+    let mut all_rotations = get_all_rotations(&scanner0);
+    // println!("{:#?}", all_rotations);
+
+    // let (num, relative_pos) = num_overlapping(&scanners[0], &scanners[1]);
+    // println!("Overlapping 0 and 1: {}, {:#?}", num, relative_pos);
+    //
+    // let (rel, normalized_1) = relative_pos.unwrap();
+    // println!("Original 1: {:#?}", scanners[1]);
+    // println!("Normalizing 1: {:#?}", normalized_1);
+    //
+    // // println!("scanner 4: {:#?}", scanners[4]);
+    // let (num, relative_pos) = num_overlapping(&scanners[1], &scanners[4]);
+    // println!("Overlapping 1 and 4: {}, {:#?}", num, relative_pos);
+
+    let mut scanners_to_normalize = scanners[1..].to_vec();
+    let mut normalized_scanners = scanners[0..1].to_vec();
+    let mut normalized_scanner_final = scanners[0].clone().into_iter().collect::<HashSet<_>>();
+
+    let mut offsets = vec![Position::new(0, 0, 0)];
+
+    'outer: while scanners_to_normalize.len() > 0 {
+        println!("normalize remaining: {}", scanners_to_normalize.len());
+        println!("normalized scanners: {}", normalized_scanners.len());
+        for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate().rev() {
+            let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
+            // Check if scanners overlap
+            let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
+            println!("overlapping: {}", num);
+            if let Some((new_offset, new_normalized)) = relative_pos {
+                normalized_scanner_final.extend(new_normalized);
+                offsets.push(new_offset);
+                // normalized_scanners.push(new_normalized);
+                scanners_to_normalize.remove(i);
+                continue 'outer;
+            }
+            // for normalized_scanner in &normalized_scanners {
+            //     // Check if scanners overlap
+            //     let (num, relative_pos) = num_overlapping(normalized_scanner, scanner_to_normalize);
+            //     println!("overlapping: {}", num);
+            //     if let Some((new_offset, new_normalized)) = relative_pos {
+            //         normalized_scanner_final.extend(new_normalized.clone());
+            //         normalized_scanners.push(new_normalized);
+            //         scanners_to_normalize.remove(i);
+            //         offsets.push(new_offset);
+            //         continue 'outer;
+            //     }
+            //
+            // }
+        }
+
+    }
+
+    println!("{:#?}", offsets);
+
+    let mut max_dist = 0;
+    for i in 0..offsets.len() {
+        for j in i+1..offsets.len() {
+            let dist = offsets[i].distance(offsets[j]);
+            if dist > max_dist {
+                max_dist = dist;
+            }
+        }
+    }
+
+    // let (num, relative_pos) = num_overlapping(&scanners[0], &scanners[1]);
+    // println!("Overlapping 0 and 1: {}, {:#?}", num, relative_pos);
+
+    max_dist.to_string()
 }
 
 #[cfg(test)]
@@ -322,11 +400,12 @@ mod tests {
 
     #[test]
     fn sample_part2() {
-        test_implementation(part2, SAMPLE2, 3993);
+        test_implementation(part2, SAMPLE, 3621);
     }
 
+    // Took 68 seconds...
     #[test]
     fn real_part2() {
-        test_implementation(part2, REAL, 4659);
+        test_implementation(part2, REAL, 12226);
     }
 }
