@@ -130,8 +130,8 @@ fn normalize_all(scanner: &[Position]) -> Vec<Vec<Position>> {
     all
 }
 
-fn num_overlapping(scanner1: &[Position], scanner2: &[Position]) -> (usize, Option<(Position, Vec<Position>)>) {
-    let scanner2_orientations = get_all_rotations(scanner2);
+fn num_overlapping(scanner1: &[Position], scanner2_orientations_normalizations: &[(Position, Vec<Position>)]) -> (usize, Option<(Position, Vec<Position>)>) {
+    // let scanner2_orientations = get_all_rotations(scanner2);
     let mut max_same = 0;
     let mut max_content = None;
     // let mut max_relative_pos: Option<Position> = None;
@@ -139,36 +139,56 @@ fn num_overlapping(scanner1: &[Position], scanner2: &[Position]) -> (usize, Opti
     for j in 0..scanner1.len() {
         let scanner1_offset = scanner1[j];
         let scanner1 = normalize_to_ith(scanner1, j);
-        let mut scanner1_set = scanner1.into_iter().collect::<HashSet<_>>();
-        for orientation in scanner2_orientations.clone() {
-            // let orientation = normalize_to_first(&orientation);
-            for i in 0..orientation.len() {
-                let scanner2_offset = orientation[i];
-                let scanner2 = normalize_to_ith(&orientation, i);
-                let mut set = scanner2.into_iter().collect::<HashSet<_>>();
-                let mut num_same = 0;
-                for pos in scanner1_set.intersection(&set) {
-                    num_same += 1;
+        let mut scanner1_set = scanner1.iter().collect::<HashSet<_>>();
 
-                }
-                if num_same > max_same {
-                    if num_same >= 12 {
-                        let relative_pos = scanner1_offset - scanner2_offset;
-                        let orientation_relative_to_first = orientation.clone().into_iter().map(|pos| pos + relative_pos).collect::<Vec<_>>();
-                        max_content = Some((relative_pos, orientation_relative_to_first));
-                    }
-                    max_same = num_same;
-                }
+        for (scanner2_offset, scanner2) in scanner2_orientations_normalizations {
+            // let scanner2_offset = orientation[i];
+            // let scanner2 = normalize_to_ith(&orientation, i);
+            let mut set = scanner2.into_iter().collect::<HashSet<_>>();
+            let mut num_same = 0;
+            for pos in scanner1_set.intersection(&set) {
+                num_same += 1;
 
             }
-            // for normalized_orientation in normalize_all(&orientation) {
-            //     let mut set = normalized_orientation.into_iter().collect::<HashSet<_>>();
-            //     let mut num_same = scanner1_set.intersection(&set).count();
-            //     if num_same > max_same {
-            //         max_same = num_same;
-            //     }
-            // }
+            if num_same > max_same {
+                if num_same >= 12 {
+                    let relative_pos = scanner1_offset - *scanner2_offset;
+                    let orientation_relative_to_first = set.into_iter().map(|pos| *pos + relative_pos + *scanner2_offset).collect::<Vec<_>>();
+                    max_content = Some((relative_pos, orientation_relative_to_first));
+                }
+                max_same = num_same;
+            }
         }
+
+        // for orientation in scanner2_orientations.clone() {
+        //     // let orientation = normalize_to_first(&orientation);
+        //     for i in 0..orientation.len() {
+        //         let scanner2_offset = orientation[i];
+        //         let scanner2 = normalize_to_ith(&orientation, i);
+        //         let mut set = scanner2.into_iter().collect::<HashSet<_>>();
+        //         let mut num_same = 0;
+        //         for pos in scanner1_set.intersection(&set) {
+        //             num_same += 1;
+        //
+        //         }
+        //         if num_same > max_same {
+        //             if num_same >= 12 {
+        //                 let relative_pos = scanner1_offset - scanner2_offset;
+        //                 let orientation_relative_to_first = orientation.clone().into_iter().map(|pos| pos + relative_pos).collect::<Vec<_>>();
+        //                 max_content = Some((relative_pos, orientation_relative_to_first));
+        //             }
+        //             max_same = num_same;
+        //         }
+        //
+        //     }
+        //     // for normalized_orientation in normalize_all(&orientation) {
+        //     //     let mut set = normalized_orientation.into_iter().collect::<HashSet<_>>();
+        //     //     let mut num_same = scanner1_set.intersection(&set).count();
+        //     //     if num_same > max_same {
+        //     //         max_same = num_same;
+        //     //     }
+        //     // }
+        // }
     }
 
     (max_same, max_content)
@@ -256,7 +276,17 @@ pub fn part1(input: &mut dyn Read) -> String {
     // let (num, relative_pos) = num_overlapping(&scanners[1], &scanners[4]);
     // println!("Overlapping 1 and 4: {}, {:#?}", num, relative_pos);
 
-    let mut scanners_to_normalize = scanners[1..].to_vec();
+    let mut scanners_to_normalize = scanners[1..].iter().map(|scanner| {
+        let mut res = vec![];
+        for orientation in get_all_rotations(scanner) {
+            for i in 0..orientation.len() {
+                let offset = orientation[i];
+                let normalized_orientation = normalize_to_ith(&orientation, i);
+                res.push((offset, normalized_orientation));
+            }
+        }
+        res
+    }).collect::<Vec<_>>();
     let mut normalized_scanners = scanners[0..1].to_vec();
     let mut normalized_scanner_final = scanners[0].clone().into_iter().collect::<HashSet<_>>();
 
@@ -316,7 +346,17 @@ pub fn part2(input: &mut dyn Read) -> String {
     // let (num, relative_pos) = num_overlapping(&scanners[1], &scanners[4]);
     // println!("Overlapping 1 and 4: {}, {:#?}", num, relative_pos);
 
-    let mut scanners_to_normalize = scanners[1..].to_vec();
+    let mut scanners_to_normalize = scanners[1..].iter().map(|scanner| {
+        let mut res = vec![];
+        for orientation in get_all_rotations(scanner) {
+            for i in 0..orientation.len() {
+                let offset = orientation[i];
+                let normalized_orientation = normalize_to_ith(&orientation, i);
+                res.push((offset, normalized_orientation));
+            }
+        }
+        res
+    }).collect::<Vec<_>>();
     let mut normalized_scanners = scanners[0..1].to_vec();
     let mut normalized_scanner_final = scanners[0].clone().into_iter().collect::<HashSet<_>>();
 
