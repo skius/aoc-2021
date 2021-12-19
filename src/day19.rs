@@ -153,12 +153,13 @@ fn num_overlapping(scanner1: &HashSet<Position>, scanner2_orientations_normaliza
             //     }
             // }
             if num_same > max_same {
+                max_same = num_same;
                 if num_same >= 12 {
                     let relative_pos = scanner1_offset - *scanner2_offset;
                     let orientation_relative_to_first = scanner2_set.into_iter().map(|&pos| pos + relative_pos + *scanner2_offset).collect::<Vec<_>>();
                     max_content = Some((relative_pos, orientation_relative_to_first));
+                    return (max_same, max_content);
                 }
-                max_same = num_same;
             }
         }
 
