@@ -289,7 +289,7 @@ pub fn part1(input: &mut dyn Read) -> String {
     'outer: while scanners_to_normalize.len() > 0 {
         println!("normalize remaining: {}", scanners_to_normalize.len());
         println!("normalized scanners: {}", normalized_scanners.len());
-        for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate().rev() {
+        for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
             let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
             let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
@@ -361,7 +361,7 @@ pub fn part2(input: &mut dyn Read) -> String {
     'outer: while scanners_to_normalize.len() > 0 {
         println!("normalize remaining: {}", scanners_to_normalize.len());
         println!("normalized scanners: {}", normalized_scanners.len());
-        for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate().rev() {
+        for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
             let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
             let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
