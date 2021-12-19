@@ -130,15 +130,14 @@ fn normalize_all(scanner: &[Position]) -> Vec<HashSet<Position>> {
     all
 }
 
-fn num_overlapping(scanner1: &[Position], scanner2_orientations_normalizations: &[(Position, HashSet<Position>)]) -> (usize, Option<(Position, Vec<Position>)>) {
+fn num_overlapping(scanner1: &HashSet<Position>, scanner2_orientations_normalizations: &[(Position, HashSet<Position>)]) -> (usize, Option<(Position, Vec<Position>)>) {
     // let scanner2_orientations = get_all_rotations(scanner2);
     let mut max_same = 0;
     let mut max_content = None;
     // let mut max_relative_pos: Option<Position> = None;
     // let mut max_orientation: Option<Vec<Position>> = None;
-    for j in 0..scanner1.len() {
-        let scanner1_offset = scanner1[j];
-        let scanner1_set = normalize_to_ith(scanner1, j);
+    for &scanner1_offset in scanner1 {
+        let scanner1_set = scanner1.into_iter().map(|&pos| pos - scanner1_offset).collect::<HashSet<_>>();
         // let mut scanner1_set = scanner1.iter().collect::<HashSet<_>>();
 
         for (scanner2_offset, scanner2_set) in scanner2_orientations_normalizations {
@@ -146,6 +145,13 @@ fn num_overlapping(scanner1: &[Position], scanner2_orientations_normalizations: 
             // let scanner2 = normalize_to_ith(&orientation, i);
             // let mut set = scanner2.into_iter().collect::<HashSet<_>>();
             let num_same = scanner1_set.intersection(&scanner2_set).count();
+
+            // let mut num_same = 0;
+            // for &pos in scanner1 {
+            //     if scanner2_set.contains(&(pos - scanner1_offset)) {
+            //         num_same += 1;
+            //     }
+            // }
             if num_same > max_same {
                 if num_same >= 12 {
                     let relative_pos = scanner1_offset - *scanner2_offset;
@@ -290,9 +296,9 @@ pub fn part1(input: &mut dyn Read) -> String {
         println!("normalize remaining: {}", scanners_to_normalize.len());
         println!("normalized scanners: {}", normalized_scanners.len());
         for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
-            let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
+            // let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
-            let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
+            let (num, relative_pos) = num_overlapping(&normalized_scanner_final, scanner_to_normalize);
             println!("overlapping: {}", num);
             if let Some((new_offset, new_normalized)) = relative_pos {
                 normalized_scanner_final.extend(new_normalized);
@@ -362,9 +368,9 @@ pub fn part2(input: &mut dyn Read) -> String {
         println!("normalize remaining: {}", scanners_to_normalize.len());
         println!("normalized scanners: {}", normalized_scanners.len());
         for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
-            let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
+            // let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
-            let (num, relative_pos) = num_overlapping(&normalized_scanner, scanner_to_normalize);
+            let (num, relative_pos) = num_overlapping(&normalized_scanner_final, scanner_to_normalize);
             println!("overlapping: {}", num);
             if let Some((new_offset, new_normalized)) = relative_pos {
                 normalized_scanner_final.extend(new_normalized);
