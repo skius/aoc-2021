@@ -1,8 +1,9 @@
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use std::fmt::Debug;
-use std::hash::Hash;
 use std::io::{BufRead, BufReader, Read};
 use std::ops::{Add, Sub};
+
+type HashSet<T> = FxHashSet<T>;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Position {
@@ -111,7 +112,7 @@ impl Position {
 
 fn normalize_to_ith(scanner: &[Position], i: usize) -> HashSet<Position> {
     let ith = scanner[i];
-    let mut new_scanner = HashSet::new();
+    let mut new_scanner = HashSet::default();
     for pos in scanner {
         new_scanner.insert(Position::new(pos.x - ith.x, pos.y - ith.y, pos.z - ith.z));
     }
@@ -294,13 +295,13 @@ pub fn part1(input: &mut dyn Read) -> String {
     let mut normalized_scanner_final = scanners[0].clone().into_iter().collect::<HashSet<_>>();
 
     'outer: while scanners_to_normalize.len() > 0 {
-        println!("normalize remaining: {}", scanners_to_normalize.len());
-        println!("normalized scanners: {}", normalized_scanners.len());
+        // println!("normalize remaining: {}", scanners_to_normalize.len());
+        // println!("normalized scanners: {}", normalized_scanners.len());
         for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
             // let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
             let (num, relative_pos) = num_overlapping(&normalized_scanner_final, scanner_to_normalize);
-            println!("overlapping: {}", num);
+            // println!("overlapping: {}", num);
             if let Some((new_offset, new_normalized)) = relative_pos {
                 normalized_scanner_final.extend(new_normalized);
                 // normalized_scanners.push(new_normalized);
@@ -366,13 +367,13 @@ pub fn part2(input: &mut dyn Read) -> String {
     let mut offsets = vec![Position::new(0, 0, 0)];
 
     'outer: while scanners_to_normalize.len() > 0 {
-        println!("normalize remaining: {}", scanners_to_normalize.len());
-        println!("normalized scanners: {}", normalized_scanners.len());
+        // println!("normalize remaining: {}", scanners_to_normalize.len());
+        // println!("normalized scanners: {}", normalized_scanners.len());
         for (i, scanner_to_normalize) in scanners_to_normalize.iter().enumerate() {
             // let normalized_scanner = normalized_scanner_final.clone().into_iter().collect::<Vec<_>>();
             // Check if scanners overlap
             let (num, relative_pos) = num_overlapping(&normalized_scanner_final, scanner_to_normalize);
-            println!("overlapping: {}", num);
+            // println!("overlapping: {}", num);
             if let Some((new_offset, new_normalized)) = relative_pos {
                 normalized_scanner_final.extend(new_normalized);
                 offsets.push(new_offset);
@@ -397,7 +398,7 @@ pub fn part2(input: &mut dyn Read) -> String {
 
     }
 
-    println!("{:#?}", offsets);
+    // println!("{:#?}", offsets);
 
     let mut max_dist = 0;
     for i in 0..offsets.len() {
