@@ -435,20 +435,20 @@ mod tests {
     //     test_implementation(part1, SAMPLE2, 4140);
     // }
 
-    // Took 72 seconds...
-    #[test]
-    fn real_part1() {
-        test_implementation(part1, REAL, 467);
-    }
+    // Took 72 seconds... no 12
+    // #[test]
+    // fn real_part1() {
+    //     test_implementation(part1, REAL, 467);
+    // }
 
     #[test]
     fn sample_part2() {
         test_implementation(part2, SAMPLE, 3621);
     }
 
-    // Took 68 seconds...
-    #[test]
-    fn real_part2() {
-        test_implementation(part2, REAL, 12226);
-    }
+    // Took 68 seconds... no 12
+    // #[test]
+    // fn real_part2() {
+    //     test_implementation(part2, REAL, 12226);
+    // }
 }
