@@ -291,6 +291,8 @@ pub fn part1(input: &mut dyn Read) -> String {
         }
         res
     }).collect::<Vec<_>>();
+    // let (num, relative_pos) = num_overlapping(&scanners[2].clone().into_iter().collect(), &scanners_to_normalize[3]);
+    // println!("Overlapping 0 and 1: {}, {:#?}", num, relative_pos);
     let mut normalized_scanners = scanners[0..1].to_vec();
     let mut normalized_scanner_final = scanners[0].clone().into_iter().collect::<HashSet<_>>();
 
