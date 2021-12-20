@@ -55,8 +55,13 @@ impl Image {
 
     fn print(&self) {
         for y in 0..self.explicit.len() {
+            if self.explicit[y].iter().all(|&x| !x) {
+                continue;
+            }
             for x in 0..self.explicit[0].len() {
-                print!("{}", if self.explicit[y][x] { '#' } else { '.' });
+                print!("{}", if self.explicit[y][x] {
+                    format!("{}  {}", termion::color::Bg(termion::color::White), termion::color::Bg(termion::color::Reset))
+                } else { "  ".to_string() });
             }
             println!();
         }
