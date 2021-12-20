@@ -1,5 +1,78 @@
 use std::io::{BufRead, BufReader, Read};
 
+struct Image {
+    explicit: Vec<Vec<bool>>,
+    outside: bool,
+}
+
+impl Image {
+    fn get(&self, x: isize, y: isize) -> bool {
+        if x < 0 || y < 0 {
+            return self.outside;
+        }
+        if x >= self.explicit.len() as isize {
+            return self.outside;
+        }
+        if y >= self.explicit[x as usize].len() as isize {
+            return self.outside;
+        }
+        self.explicit[y as usize][x as usize]
+    }
+
+    fn kernel_index(&self, x: isize, y: isize) -> usize {
+        let mut index = 0;
+        for dy in -1..=1 {
+            for dx in -1..=1 {
+                index <<= 1;
+                index += self.get(x + dx, y + dy) as usize;
+            }
+        }
+        index
+    }
+
+    fn process(&mut self, kernel: &[bool]) {
+        let new_y = self.explicit.len() + 2;
+        let new_x = self.explicit[0].len() + 2;
+        let mut new_image = vec![vec![false; new_x]; new_y];
+        for y in 0..new_y {
+            for x in 0..new_x {
+                let index = self.kernel_index(x as isize - 1, y as isize - 1);
+                new_image[y][x] = kernel[index as usize];
+            }
+        }
+        // Take something that's in the infinite grid and doesn't touch the explicit image
+        self.outside = kernel[self.kernel_index(-2, -2)];
+        self.explicit = new_image;
+    }
+
+    fn count_ones(&self) -> Result<usize, String> {
+        if self.outside {
+            return Err("infinitely many ones, outside is #".to_string());
+        }
+        let sum = self.explicit.iter().map(|row| row.iter().filter(|&&x| x).count()).sum();
+        Ok(sum)
+    }
+
+    fn print(&self) {
+        for y in 0..self.explicit.len() {
+            for x in 0..self.explicit[0].len() {
+                print!("{}", if self.explicit[y][x] { '#' } else { '.' });
+            }
+            println!();
+        }
+        println!();
+    }
+}
+
+impl From<Vec<Vec<bool>>> for Image {
+    fn from(explicit: Vec<Vec<bool>>) -> Self {
+        Image {
+            explicit,
+            outside: false,
+        }
+    }
+}
+
 fn read_input(input: &mut dyn Read) -> (Vec<bool>, Vec<Vec<bool>>) {
     let mut lines = BufReader::new(input).lines();
     let image_enhancement_algorithm = lines.next().unwrap().unwrap().chars().map(|c| c == '#').collect::<Vec<_>>();
@@ -9,83 +82,17 @@ fn read_input(input: &mut dyn Read) -> (Vec<bool>, Vec<Vec<bool>>) {
     (image_enhancement_algorithm, image)
 }
 
-fn get_or_default(image: &Vec<Vec<bool>>, x: isize, y: isize, default: u16) -> u16 {
-    if x < 0 || x >= image[0].len() as isize {
-        return default;
-    }
-    if y < 0 || y >= image.len() as isize {
-        return default;
-    }
-
-    image[y as usize][x as usize] as u16
-}
-
-fn kernel_index(image: &Vec<Vec<bool>>, x: isize, y: isize, default: u16) -> u16 {
-    let mut index = 0;
-    for dy in -1..=1 {
-        for dx in -1..=1 {
-            index <<= 1;
-            index += get_or_default(image, x + dx, y + dy, default);
-        }
-    }
-    // index <<= 1;
-    // index += get_or_zero(image, x - 1, y - 1);
-    // index <<= 1;
-    // index += get_or_zero(image, x, y - 1);
-    // index <<= 1;
-    // index += get_or_zero(image, x + 1, y - 1);
-    // index <<= 1;
-    // index += get_or_zero(image, x - 1, y);
-    // index <<= 1;
-    // index += get_or_zero(image, x, y);
-    // index <<= 1;
-    // index += get_or_zero(image, x + 1, y);
-    // index <<= 1;
-    // index += get_or_zero(image, x - 1, y + 1);
-    // index <<= 1;
-    // index += get_or_zero(image, x, y + 1);
-    // index <<= 1;
-    // index += get_or_zero(image, x + 1, y + 1);
-
-    index
-}
-
-fn step(image: &Vec<Vec<bool>>, image_enhancement_algorithm: &[bool], default: u16) -> Vec<Vec<bool>> {
-    let new_y = image.len() + 2;
-    let new_x = image[0].len() + 2;
-    let mut new_image = vec![vec![false; new_x]; new_y];
-    for y in 0..new_y {
-        for x in 0..new_x {
-            let index = kernel_index(&image, x as isize - 1, y as isize - 1, default);
-            new_image[y][x] = image_enhancement_algorithm[index as usize];
-        }
-    }
-    new_image
-}
-
-fn print_image(image: &Vec<Vec<bool>>) {
-    for y in 0..image.len() {
-        for x in 0..image[0].len() {
-            print!("{}", if image[y][x] { '#' } else { '.' });
-        }
-        println!();
-    }
-    println!();
-}
-
 fn run_steps(input: &mut dyn Read, steps: usize) -> String {
-    let (image_enhancement_algorithm, mut image) = read_input(input);
-    // print_image(&image);
-    let does_flicker = image_enhancement_algorithm[0];
-    let mut default = 0;
+    let (image_enhancement_algorithm, image) = read_input(input);
+    let mut image: Image = image.into();
+
+    // image.print();
     for _ in 0..steps {
-        image = step(&image, &image_enhancement_algorithm, default);
-        default = if does_flicker { 1 - default } else { 0 };
-        // print_image(&image);
+        image.process(&image_enhancement_algorithm);
+        // image.print();
     }
 
-
-    image.iter().map(|row| row.iter().filter(|&&b| b).count()).sum::<usize>().to_string()
+    image.count_ones().unwrap().to_string()
 }
 
 pub fn part1(input: &mut dyn Read) -> String {
