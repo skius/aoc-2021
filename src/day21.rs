@@ -1,4 +1,6 @@
+use std::char::MAX;
 use std::io::Read;
+use num_bigint::BigUint;
 use rustc_hash::FxHashMap;
 
 trait Die: Default {
@@ -100,13 +102,58 @@ const THREE_ROLLS: [usize; 10] = [
 
 // function (number_of_paths entering here) -> (number_of_paths leaving here)
 
-const MAX_SCORE_2: usize = 21;
 
-fn number_of_possibilities_one_wins_starting_from(target: u8, cache: &mut HashMap<(u8, usize, usize, usize, usize), usize>, turn: u8, p1: usize, p2: usize, score1: usize, score2: usize) -> usize {
+// fn dp_solution(p1: usize, p2: usize) {
+//     const MAX_SCORE_BOUND: usize = MAX_SCORE_2 + 10;
+//
+//     let mut DP = [[[[[(0, 0); MAX_POS]; MAX_POS]; MAX_SCORE_BOUND]; MAX_SCORE_BOUND]; 2];
+//
+//     for pos1 in 0..MAX_POS {
+//         for pos2 in 0..MAX_POS {
+//             for score2 in 0..MAX_SCORE_BOUND {
+//                 // if it's p1's turn at those positions and p1 has >=21 score, then there's one possibility that he wins
+//                 for score1 in 21..MAX_SCORE_BOUND {
+//                     DP[0][pos1][pos2][score1][score2] = (1, 0);
+//                 }
+//
+//             }
+//         }
+//     }
+//
+//     for pos1 in 0..MAX_POS {
+//         for pos2 in 0..MAX_POS {
+//             for score1 in 0..MAX_SCORE_BOUND {
+//                 // if it's p2's turn at those positions and p1 has >=21 score, then there's one possibility that he wins
+//                 for score2 in 21..MAX_SCORE_BOUND {
+//                     DP[1][pos1][pos2][score1][score2] = (0, 1);
+//                 }
+//
+//             }
+//         }
+//     }
+//
+//     for turn in 0..2 {
+//         for pos1 in 0..MAX_POS {
+//             for pos2 in 0..MAX_POS {
+//                 for score1 in (0..21).rev() {
+//                     for score2 in (0..21).rev() {
+//
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//
+//
+// }
+
+const MAX_SCORE_2: usize = 1000;
+
+fn number_of_possibilities_one_wins_starting_from(target: u8, cache: &mut HashMap<(u8, usize, usize, usize, usize), BigUint>, turn: u8, p1: usize, p2: usize, score1: usize, score2: usize) -> BigUint {
     // println!("Called with turn={}, p1={}, p2={}, score1={}, score2={}", turn, p1, p2, score1, score2);
     if let Some(score) = cache.get(&(turn, p1, p2, score1, score2)) {
         // println!("Got with params: target={}, p1={}, p2={}, score1={}, score2={}", target, p1, p2, score1, score2);
-        return *score;
+        return score.clone();
     }
 
     let possibilities = if turn == 1 {
@@ -114,33 +161,35 @@ fn number_of_possibilities_one_wins_starting_from(target: u8, cache: &mut HashMa
         //     return 1;
         // }
         if score2 >= MAX_SCORE_2 {
-            return (target == 2) as usize;
+            BigUint::from((target == 2) as usize)
             // return 0;
+        } else {
+            let mut possibilities = BigUint::from(0u8);
+            for num in 3..=9 {
+                let new_pos = update_pos(p1, num);
+                possibilities += number_of_possibilities_one_wins_starting_from(target, cache, 2, new_pos, p2, score1 + new_pos, score2) * BigUint::from(THREE_ROLLS[num]);
+            }
+            possibilities
         }
 
-        let mut possibilities = 0;
-        for num in 3..=9 {
-            let new_pos = update_pos(p1, num);
-            possibilities += THREE_ROLLS[num] * number_of_possibilities_one_wins_starting_from(target, cache, 2, new_pos, p2, score1 + new_pos, score2);
-        }
-        possibilities
+
     } else {
         assert_eq!(turn, 2);
 
         if score1 >= MAX_SCORE_2 {
-            return (target == 1) as usize;
+            BigUint::from((target == 1) as usize)
             // return 1;
+        } else {
+            let mut possibilities = BigUint::from(0u8);
+            for num in 3..=9 {
+                let new_pos = update_pos(p2, num);
+                possibilities += BigUint::from(THREE_ROLLS[num]) * number_of_possibilities_one_wins_starting_from(target, cache, 1, p1, new_pos, score1, score2 + new_pos);
+            }
+            possibilities
         }
-
-        let mut possibilities = 0;
-        for num in 3..=9 {
-            let new_pos = update_pos(p2, num);
-            possibilities += THREE_ROLLS[num] * number_of_possibilities_one_wins_starting_from(target, cache, 1, p1, new_pos, score1, score2 + new_pos);
-        }
-        possibilities
     };
 
-    cache.insert((turn, p1, p2, score1, score2), possibilities);
+    cache.insert((turn, p1, p2, score1, score2), possibilities.clone());
 
     possibilities
 }
@@ -155,11 +204,13 @@ pub fn part2(input: &mut dyn Read) -> String {
 
     let option1 = number_of_possibilities_one_wins_starting_from(1, &mut cache,1, p1, p2, 0, 0);
     //  Clearing because target is different
+    println!("option1 = {}", option1);
+
     cache.clear();
     let option2 = number_of_possibilities_one_wins_starting_from(2, &mut cache,1, p1, p2, 0, 0);
 
     // println!("option1 = {}", option1);
-    // println!("option2 = {}", option2);
+    println!("option2 = {}", option2);
 
     option1.max(option2).to_string()
 }

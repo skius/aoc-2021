@@ -9,6 +9,7 @@ clap = "3.0.0-beta.5"
 termion = "*"
 rand = "0.8.4"
 rustc-hash = "1.1.0"
+num-bigint = "0.4.2"
 
 [dev-dependencies]
 criterion = "0.3"
