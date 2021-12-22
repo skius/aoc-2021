@@ -72,7 +72,7 @@ pub fn part1(input: &mut dyn Read) -> String {
     count.to_string()
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 struct Cuboid {
     kind: InstructionKind,
     x: (i64, i64),
@@ -91,13 +91,13 @@ impl Cuboid {
     }
 
     fn volume(&self) -> usize {
-        let (dx, dy, dz) = (self.x.1 - self.x.0, self.y.1 - self.y.0, self.z.1 - self.z.0);
+        let (dx, dy, dz) = (self.x.1 - self.x.0 + 1, self.y.1 - self.y.0 + 1, self.z.1 - self.z.0 + 1);
         dx as usize * dy as usize * dz as usize
     }
 
     fn valid(&self) -> bool {
         let (dx, dy, dz) = (self.x.1 - self.x.0, self.y.1 - self.y.0, self.z.1 - self.z.0);
-        dx >= 1 && dy >= 1 && dz >= 1
+        dx >= 0 && dy >= 0 && dz >= 0
     }
 }
 
@@ -109,7 +109,7 @@ impl From<Instruction> for Cuboid {
 
 impl Debug for Cuboid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x={}..{}, y={}..{}, z={}..{})", self.x.0, self.x.1, self.y.0, self.y.1, self.z.0, self.z.1)
+        write!(f, "({:?} x={}..{}, y={}..{}, z={}..{})", self.kind, self.x.0, self.x.1, self.y.0, self.y.1, self.z.0, self.z.1)
     }
 }
 
@@ -121,32 +121,60 @@ struct Grid {
 fn split_up(s: &Cuboid, c: &Cuboid) -> Vec<Cuboid> {
     let mut res = vec![];
 
-    let low_x = Cuboid::new(c.kind, (c.x.0, s.x.0.min(c.x.1)), c.y, c.z);
+    let low_x = Cuboid::new(c.kind, (c.x.0, (s.x.0-1).min(c.x.1)), c.y, c.z);
+    // println!("low_x: {:?}", low_x);
     if low_x.valid() {
+        // println!("valid");
         res.push(low_x);
     }
-    let high_x = Cuboid::new(c.kind, (s.x.1.max(c.x.0), c.x.1), c.y, c.z);
+    // let high_x = Cuboid::new(c.kind, ((s.x.1 + 1).max(c.x.0 + 1), c.x.1), c.y, c.z);
+    let high_x = Cuboid::new(c.kind, ((s.x.1 + 1).max(c.x.0), c.x.1), c.y, c.z);
+    // println!("high_x: {:?}", high_x);
     if high_x.valid() {
+        // println!("valid");
         res.push(high_x);
     }
 
-    let remaining_x_bounds = (s.x.0.max(c.x.0), s.x.1.min(c.x.1));
-    let low_y = Cuboid::new(c.kind, remaining_x_bounds, (c.y.0, s.y.0.min(c.y.1)), c.z);
+    // let remaining_x_bounds = (s.x.0.max(c.x.0 + 1), s.x.1.min(c.x.1 - 1));
+    // let remaining_x_bounds = (low_x.x.1 + 1, high_x.x.0 - 1);
+    // let remaining_x_bounds = (low_x.x.1.max(low_x.x.0) + 1, high_x.x.0.min(high_x.x.1) - 1);
+    // want intersection of cube and stencil on x-axis
+    let remaining_x_low = s.x.0.max(c.x.0);
+    let remaining_x_high = s.x.1.min(c.x.1);
+    let remaining_x_bounds = (remaining_x_low, remaining_x_high);
+
+    let low_y = Cuboid::new(c.kind, remaining_x_bounds, (c.y.0, (s.y.0-1).min(c.y.1)), c.z);
+    // println!("low_y: {:?}", low_y);
     if low_y.valid() {
+        // println!("valid");
         res.push(low_y);
     }
-    let high_x = Cuboid::new(c.kind, remaining_x_bounds, (s.y.1.max(c.y.0), c.y.1), c.z);
-    if high_x.valid() {
-        res.push(high_x);
+    // let high_y = Cuboid::new(c.kind, remaining_x_bounds, ((s.y.1 + 1).max(c.y.0 + 1), c.y.1), c.z);
+    let high_y = Cuboid::new(c.kind, remaining_x_bounds, ((s.y.1 + 1).max(c.y.0), c.y.1), c.z);
+    // println!("high_y: {:?}", high_y);
+    if high_y.valid() {
+        // println!("valid");
+        res.push(high_y);
     }
 
-    let remaining_y_bounds = (s.y.0.max(c.y.0), s.y.1.min(c.y.1));
-    let low_z = Cuboid::new(c.kind, remaining_x_bounds, remaining_y_bounds, (c.z.0, s.z.0.min(c.z.1)));
+    // let remaining_y_bounds = (s.y.0.max(c.y.0 + 1), s.y.1.min(c.y.1 - 1));
+    // let remaining_y_bounds = (low_y.y.1.max(low_y.y.0) + 1, high_y.y.0.min(high_y.y.1) - 1);
+
+    let remaining_y_low = s.y.0.max(c.y.0);
+    let remaining_y_high = s.y.1.min(c.y.1);
+    let remaining_y_bounds = (remaining_y_low, remaining_y_high);
+
+    let low_z = Cuboid::new(c.kind, remaining_x_bounds, remaining_y_bounds, (c.z.0, (s.z.0-1).min(c.z.1)));
+    // println!("low_z: {:?}", low_z);
     if low_z.valid() {
+        // println!("valid");
         res.push(low_z);
     }
-    let high_z = Cuboid::new(c.kind, remaining_x_bounds, remaining_y_bounds, (s.z.1.max(c.z.0), c.z.1));
+    // let high_z = Cuboid::new(c.kind, remaining_x_bounds, remaining_y_bounds, ((s.z.1 + 1).max(c.z.0 + 1), c.z.1));
+    let high_z = Cuboid::new(c.kind, remaining_x_bounds, remaining_y_bounds, ((s.z.1 + 1).max(c.z.0), c.z.1));
+    // println!("high_z: {:?}", high_z);
     if high_z.valid() {
+        // println!("valid");
         res.push(high_z);
     }
 
@@ -166,32 +194,32 @@ fn split_into_non_overlapping(overlaps: &[&Cuboid], cuboid: &Cuboid) -> Vec<Cubo
             let split_up = split_up(stencil, curr_cuboid);
             // println!("Split up into: {:?}", split_up);
 
-            for cub1 in &split_up {
-                let overlaps = find_overlaps(&split_up, cub1, cub1);
-                if overlaps.len() > 0 {
-                    println!("cub1 = {:?}, overlaps with: {:?}", cub1, overlaps);
-                    // new_cuboids.extend(split_into_non_overlapping(&overlaps, cub1));
-                    assert!(false);
-                }
-            }
-
+            // for cub1 in &split_up {
+            //     let overlaps = find_overlaps(&split_up, cub1, cub1);
+            //     if overlaps.len() > 0 {
+            //         println!("cub1 = {:?}, overlaps with: {:?}", cub1, overlaps);
+            //         // new_cuboids.extend(split_into_non_overlapping(&overlaps, cub1));
+            //         assert!(false);
+            //     }
+            // }
+            //
             // assert!(contains(curr_cuboid, &split_up));
 
             new_cuboids.extend(split_up);
         }
         // println!("new len {}", new_cuboids.len());
 
-        for cub1 in &new_cuboids {
-            let overlaps = find_overlaps(&new_cuboids, cub1, cub1);
-            if overlaps.len() > 0 {
-                println!("Found offender");
-                println!("res: {:?}", res);
-                println!("new_cuboids: {:?}", new_cuboids);
-                println!("cub1 = {:?}, overlaps with: {:?}", cub1, overlaps);
-                // new_cuboids.extend(split_into_non_overlapping(&overlaps, cub1));
-                assert!(false);
-            }
-        }
+        // for cub1 in &new_cuboids {
+        //     let overlaps = find_overlaps(&new_cuboids, cub1, cub1);
+        //     if overlaps.len() > 0 {
+        //         println!("Found offender");
+        //         println!("res: {:?}", res);
+        //         println!("new_cuboids: {:?}", new_cuboids);
+        //         println!("cub1 = {:?}, overlaps with: {:?}", cub1, overlaps);
+        //         // new_cuboids.extend(split_into_non_overlapping(&overlaps, cub1));
+        //         assert!(false);
+        //     }
+        // }
 
         res = new_cuboids;
     }
@@ -217,9 +245,9 @@ fn find_overlaps<'a>(others: &'a [Cuboid], cuboid: &'a Cuboid, ignore: &'a Cuboi
         if other == ignore {
             continue;
         }
-        let x_overlap = cuboid.x.0 < other.x.1 && cuboid.x.1 > other.x.0;
-        let y_overlap = cuboid.y.0 < other.y.1 && cuboid.y.1 > other.y.0;
-        let z_overlap = cuboid.z.0 < other.z.1 && cuboid.z.1 > other.z.0;
+        let x_overlap = cuboid.x.0 <= other.x.1 && cuboid.x.1 >= other.x.0;
+        let y_overlap = cuboid.y.0 <= other.y.1 && cuboid.y.1 >= other.y.0;
+        let z_overlap = cuboid.z.0 <= other.z.1 && cuboid.z.1 >= other.z.0;
         if x_overlap && y_overlap && z_overlap {
             overlaps.push(other);
         }
@@ -233,9 +261,9 @@ impl Grid {
     fn find_overlaps(&self, cuboid: &Cuboid) -> Vec<&Cuboid> {
         let mut overlaps = vec![];
         for other in &self.cuboids {
-            let x_overlap = cuboid.x.0 < other.x.1 && cuboid.x.1 > other.x.0;
-            let y_overlap = cuboid.y.0 < other.y.1 && cuboid.y.1 > other.y.0;
-            let z_overlap = cuboid.z.0 < other.z.1 && cuboid.z.1 > other.z.0;
+            let x_overlap = cuboid.x.0 <= other.x.1 && cuboid.x.1 >= other.x.0;
+            let y_overlap = cuboid.y.0 <= other.y.1 && cuboid.y.1 >= other.y.0;
+            let z_overlap = cuboid.z.0 <= other.z.1 && cuboid.z.1 >= other.z.0;
             if x_overlap && y_overlap && z_overlap {
                 overlaps.push(other);
             }
@@ -272,7 +300,7 @@ impl Default for Grid {
     }
 }
 
-pub fn part2(input: &mut dyn Read) -> String {
+fn read_input(input: &mut dyn Read) -> Vec<Instruction> {
     let mut buf = String::new();
     input.read_to_string(&mut buf).unwrap();
     let mut lines = buf.lines();
@@ -297,6 +325,11 @@ pub fn part2(input: &mut dyn Read) -> String {
             z: coords[2],
         });
     }
+    steps
+}
+
+pub fn part2(input: &mut dyn Read) -> String {
+    let mut steps = read_input(input);
 
     // let cuboid = Cuboid::new(On, (0, 50), (0, 50), (0, 50));
     // let stencil = Cuboid::new(On, (-10, 51), (-10,115), (-10,51));
@@ -313,8 +346,8 @@ pub fn part2(input: &mut dyn Read) -> String {
     //
     // println!("{:?}", res);
 
-    // let cuboid = Cuboid::new(On, (-16, 9), (-7, 10), (-47, -33));
-    // let stencil = Cuboid::new(Off, (18, 30), (-20, -8), (-3, 13));
+    // let cuboid = Cuboid::new(On, (1,1), (-20,20), (-30,30));
+    // let stencil = Cuboid::new(Off, (1,1), (0,0), (0,0));
     //
     // let res = split_up(&stencil, &cuboid);
     // println!("{:?}", res);
@@ -333,19 +366,17 @@ pub fn part2(input: &mut dyn Read) -> String {
 
     let mut grid = Grid::default();
 
-    // let first_step = steps.pop().unwrap();
-    // grid.add_cuboid(first_step.into());
-
     let rev_steps = steps.into_iter().rev().collect::<Vec<_>>();
 
     for step in rev_steps {
         let cuboid = step.into();
-        println!("num: {}", grid.num_cuboids());
-        println!("Processing step {:?}", cuboid);
+        // println!("num: {}", grid.num_cuboids());
+        // println!("grid: {:#?}", grid.cuboids);
+        // println!("Processing step {:?}", cuboid);
         grid.add_cuboid(cuboid);
     }
-    println!("num: {}", grid.num_cuboids());
-    println!("grid: {:?}", grid.cuboids);
+    // println!("num: {}", grid.num_cuboids());
+    // println!("grid: {:#?}", grid.cuboids);
 
     grid.count_on().to_string()
 }
@@ -377,6 +408,6 @@ mod tests {
 
     #[test]
     fn real_part2() {
-        test_implementation(part2, REAL, 630947104784464usize);
+        test_implementation(part2, REAL, 1262883317822267usize);
     }
 }
