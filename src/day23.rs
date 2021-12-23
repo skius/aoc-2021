@@ -50,9 +50,9 @@ impl Cell {
     }
 }
 
-type Grid = [[Cell; 11]; 3];
+type Grid<const Y: usize> = [[Cell; 11]; Y];
 
-fn print_grid(grid: &Grid) {
+fn print_grid<const Y: usize>(grid: &Grid<Y>) {
     for row in grid {
         for cell in row {
             match cell {
@@ -73,52 +73,7 @@ fn print_grid(grid: &Grid) {
     println!();
 }
 
-// fn move_type(grid: &Grid, from_x: usize, from_y: usize, to_x: usize, to_y: usize) -> Grid {
-//     let mut new_grid = *grid;
-//     assert!(matches!(grid[from_y][from_x], Filled(_) /*| FinalFilled(_)*/));
-//     assert_eq!(grid[to_y][to_x], Empty);
-//
-//     new_grid[from_y][from_x] = Empty;
-//     new_grid[to_y][to_x] = grid[from_y][from_x];
-//
-//     // if let Filled(t) = new_grid[to_y][to_x] {
-//     //     if to_x == t.target_x() && from_y == 1 && to_y == 2 /* only adjust if moving top down */ {
-//     //         new_grid[to_y][to_x] = FinalFilled(t);
-//     //     }
-//     // }
-//
-//     new_grid
-// }
-
-// fn neighbor_coords(grid: &Grid, x: usize, y: usize) -> Vec<(usize, usize)> {
-//     let mut coords = vec![];
-//     let self_type = match grid[y][x] {
-//         Filled(t) => t,
-//         _ => panic!("neighbor_coords called on non-filled cell")
-//     };
-//     if x > 0 && matches!(grid[y][x - 1], Empty) {
-//         coords.push((x - 1, y));
-//     }
-//     if x < 12 && matches!(grid[y][x + 1], Empty) {
-//         coords.push((x + 1, y));
-//     }
-//     // TODO if is in top slot of room, then can only move up (y-1) if it hasn't already reached its destination
-//     if y == 2 && matches!(grid[y - 1][x], Empty) {
-//         coords.push((x, y - 1));
-//     }
-//     if y == 3 && matches!(grid[y - 1][x], Empty) {
-//         coords.push((x, y - 1));
-//     }
-//     if y == 1 && matches!(grid[y + 1][x], Empty) && self_type.target_x() == x {
-//         coords.push((x, y + 1));
-//     }
-//     if y == 2 && matches!(grid[y + 1][x], Empty) {
-//         coords.push((x, y + 1));
-//     }
-//     coords
-// }
-
-fn succs(grid: &Grid) -> Vec<(Grid, usize)> {
+fn succs<const Y: usize>(grid: &Grid<Y>) -> Vec<(Grid<Y>, usize)> {
     let mut succs = vec![];
 
     fn possible_waiting_spot(x: usize) -> bool {
@@ -132,30 +87,50 @@ fn succs(grid: &Grid) -> Vec<(Grid, usize)> {
         if let Filled(t) = grid[y][x] {
             let to_x = t.target_x();
             if (x+1..=to_x).all(|x| grid[y][x] == Empty) && (to_x..x).all(|x| grid[y][x] == Empty) {
-                if grid[1][to_x] == Empty {
-                    if grid[2][to_x] == Empty {
-                        let mut new_grid = *grid;
-                        new_grid[y][x] = Empty;
-                        new_grid[2][to_x] = FinalFilled(t);
-
-                        let cost = ((to_x as isize - x as isize).abs() as usize + 2) * t.cost();
-                        succs.push((new_grid, cost));
-                    } else {
-                        let mut new_grid = *grid;
-                        new_grid[y][x] = Empty;
-                        new_grid[1][to_x] = FinalFilled(t);
-
-                        let cost = ((to_x as isize - x as isize).abs() as usize + 1) * t.cost();
-                        succs.push((new_grid, cost));
-                    }
+                let mut dest_y = 1;
+                while dest_y < Y && grid[dest_y][to_x] == Empty {
+                    dest_y += 1;
                 }
+                dest_y -= 1;
+                if dest_y == 0 {
+                    // no free slots
+                    continue;
+                }
+                // Now dest_y points to the lowest free slot
+                // (additionally we can now check that none of the preoccupied slots contain cells that do not belong there
+                if (dest_y..Y).any(|y| {
+                    if let Filled(t) = grid[y][to_x] {
+                        if t.target_x() != to_x {
+                            return true;
+                        }
+                    }
+                    false
+                }) {
+                    continue;
+                }
+
+                let mut new_grid = *grid;
+                new_grid[y][x] = Empty;
+                new_grid[dest_y][to_x] = FinalFilled(t);
+
+                let cost = ((to_x as isize - x as isize).abs() as usize + dest_y) * t.cost();
+                succs.push((new_grid, cost));
             }
         }
     }
 
     // Then check all dudes that are still in their original room to move outside
     for from_x in 2..=8 {
-        if let Filled(t) = grid[1][from_x] {
+        let mut from_y = 1;
+        while from_y < Y  && grid[from_y][from_x] == Empty {
+            from_y += 1;
+        }
+        // now from_y points to the highest used slot
+        if from_y == Y  {
+            // no dude here
+            continue;
+        }
+        if let Filled(t) = grid[from_y][from_x] {
             // It may go left
             for to_x in (0..from_x).rev() {
                 if grid[0][to_x] != Empty {
@@ -163,9 +138,9 @@ fn succs(grid: &Grid) -> Vec<(Grid, usize)> {
                 }
                 if possible_waiting_spot(to_x) {
                     let mut new_grid = *grid;
-                    new_grid[1][from_x] = Empty;
+                    new_grid[from_y][from_x] = Empty;
                     new_grid[0][to_x] = Filled(t);
-                    let cost = (from_x - to_x + 1) * t.cost();
+                    let cost = (from_x - to_x + from_y) * t.cost();
                     succs.push((new_grid, cost));
                 }
             }
@@ -176,39 +151,10 @@ fn succs(grid: &Grid) -> Vec<(Grid, usize)> {
                 }
                 if possible_waiting_spot(to_x) {
                     let mut new_grid = *grid;
-                    new_grid[1][from_x] = Empty;
+                    new_grid[from_y][from_x] = Empty;
                     new_grid[0][to_x] = Filled(t);
-                    let cost = (to_x - from_x + 1) * t.cost();
+                    let cost = (to_x - from_x + from_y) * t.cost();
                     succs.push((new_grid, cost));
-                }
-            }
-        } else if grid[1][from_x] == Empty {
-            if let Filled(t) = grid[2][from_x] {
-                // It may go left
-                for to_x in (0..from_x).rev() {
-                    if grid[0][to_x] != Empty {
-                        break;
-                    }
-                    if possible_waiting_spot(to_x) {
-                        let mut new_grid = *grid;
-                        new_grid[2][from_x] = Empty;
-                        new_grid[0][to_x] = Filled(t);
-                        let cost = (from_x - to_x + 2) * t.cost();
-                        succs.push((new_grid, cost));
-                    }
-                }
-                // It may go right
-                for to_x in from_x+1..11 {
-                    if grid[0][to_x] != Empty {
-                        break;
-                    }
-                    if possible_waiting_spot(to_x) {
-                        let mut new_grid = *grid;
-                        new_grid[2][from_x] = Empty;
-                        new_grid[0][to_x] = Filled(t);
-                        let cost = (to_x - from_x + 2) * t.cost();
-                        succs.push((new_grid, cost));
-                    }
                 }
             }
         }
@@ -217,23 +163,39 @@ fn succs(grid: &Grid) -> Vec<(Grid, usize)> {
     succs
 }
 
-pub fn part1(input: &mut dyn Read) -> String {
-    type X = Grid;
+fn solve<const Y: usize>(part2: bool) -> String {
+    // println!("Size of grid: {}", std::mem::size_of::<Grid<Y>>());
 
-    let mut grid = [[Wall; 11]; 3];
+    let mut grid = [[Wall; 11]; Y ];
     for i in 0..=10 {
         grid[0][i] = Empty;
     }
 
-    // SAMPLE:
-    grid[1][2] = Filled(B); grid[1][4] = Filled(C); grid[1][6] = Filled(B); grid[1][8] = Filled(D);
-    grid[2][2] = Filled(A); grid[2][4] = Filled(D); grid[2][6] = Filled(C); grid[2][8] = Filled(A);
+    if !part2 {
+        // SAMPLE:
+        // grid[1][2] = Filled(B); grid[1][4] = Filled(C); grid[1][6] = Filled(B); grid[1][8] = Filled(D);
+        // grid[2][2] = Filled(A); grid[2][4] = Filled(D); grid[2][6] = Filled(C); grid[2][8] = Filled(A);
 
-    // REAL:
-    grid[1][2] = Filled(D); grid[1][4] = Filled(D); grid[1][6] = Filled(C); grid[1][8] = Filled(C);
-    grid[2][2] = Filled(B); grid[2][4] = Filled(A); grid[2][6] = Filled(B); grid[2][8] = Filled(A);
+        // REAL:
+        grid[1][2] = Filled(D); grid[1][4] = Filled(D); grid[1][6] = Filled(C); grid[1][8] = Filled(C);
+        grid[2][2] = Filled(B); grid[2][4] = Filled(A); grid[2][6] = Filled(B); grid[2][8] = Filled(A);
+    } else {
+        // SAMPLE:
+        // grid[1][2] = Filled(B); grid[1][4] = Filled(C); grid[1][6] = Filled(B); grid[1][8] = Filled(D);
+        // grid[2][2] = Filled(D); grid[2][4] = Filled(C); grid[2][6] = Filled(B); grid[2][8] = Filled(A);
+        // grid[3][2] = Filled(D); grid[3][4] = Filled(B); grid[3][6] = Filled(A); grid[3][8] = Filled(C);
+        // grid[4][2] = Filled(A); grid[4][4] = Filled(D); grid[4][6] = Filled(C); grid[4][8] = Filled(A);
 
-    print_grid(&grid);
+        // REAL:
+        grid[1][2] = Filled(D); grid[1][4] = Filled(D); grid[1][6] = Filled(C); grid[1][8] = Filled(C);
+        grid[2][2] = Filled(D); grid[2][4] = Filled(C); grid[2][6] = Filled(B); grid[2][8] = Filled(A);
+        grid[3][2] = Filled(D); grid[3][4] = Filled(B); grid[3][6] = Filled(A); grid[3][8] = Filled(C);
+        grid[4][2] = Filled(B); grid[4][4] = Filled(A); grid[4][6] = Filled(B); grid[4][8] = Filled(A);
+    }
+
+
+
+    // print_grid(&grid);
 
     let (path, cost) = dijkstra(
         &grid,
@@ -242,47 +204,43 @@ pub fn part1(input: &mut dyn Read) -> String {
             // print_grid(grid);
 
             return succs(grid);
-
-
-            // let mut succs = vec![];
-            // // let pre = Instant::now();
-            //
-            // // find all dudes that are still in their original cells, and add to succs all possible grids
-            // // if they would move out to some place
-            // for from_y in 1..=3 {
-            //     for from_x in 1..=11 {
-            //         if let Filled(t) = grid[from_y][from_x] {
-            //             for (to_x, to_y) in neighbor_coords(&grid, from_x, from_y) {
-            //                 // println!("{:?} -> {:?}", (from_x, from_y), (to_x, to_y));
-            //                 succs.push((move_type(grid, from_x, from_y, to_x, to_y), t.cost()));
-            //             }
-            //         }
-            //         if let FinalFilled(t) = grid[from_y][from_x] {
-            //             if from_y == 2 && matches!(grid[from_y + 1][from_x], Empty) {
-            //                 succs.push((move_type(grid, from_x, from_y, from_x, from_y + 1), t.cost()));
-            //             }
-            //         }
-            //     }
-            // }
-            // // println!("calculating neighbors took {:?}", pre.elapsed());
-            //
-            // succs
         },
         |grid| {
-            grid[1][2].filled_with(A) && grid[1][4].filled_with(B) && grid[1][6].filled_with(C) && grid[1][8].filled_with(D) &&
-            grid[2][2].filled_with(A) && grid[2][4].filled_with(B) && grid[2][6].filled_with(C) && grid[2][8].filled_with(D)
+            for y in 1..Y {
+                if !grid[y][A.target_x()].filled_with(A) {
+                    return false;
+                }
+                if !grid[y][B.target_x()].filled_with(B) {
+                    return false;
+                }
+                if !grid[y][C.target_x()].filled_with(C) {
+                    return false;
+                }
+                if !grid[y][D.target_x()].filled_with(D) {
+                    return false;
+                }
+            }
+
+            true
         },
     ).unwrap();
 
-    for grid in &path {
-        print_grid(grid);
-    }
+    // for grid in &path {
+    //     print_grid(grid);
+    // }
 
     cost.to_string()
 }
 
+
+
+pub fn part1(input: &mut dyn Read) -> String {
+    solve::<3>(false)
+}
+
 pub fn part2(input: &mut dyn Read) -> String {
-    todo!()
+    solve::<5>(true)
+
 }
 
 
@@ -295,25 +253,28 @@ mod tests {
     const SAMPLE: &[u8] = include_bytes!("samples/23.txt");
     const REAL: &[u8] = include_bytes!("../inputs/23.txt");
 
-    #[test]
-    fn sample_part1() {
-        test_implementation(part1, SAMPLE, 35);
-    }
+    // #[test]
+    // fn sample_part1() {
+    //     test_implementation(part1, SAMPLE, 12521);
+    // }
 
     // 17109 too high for my input
     // 16051 too low
-    #[test]
-    fn real_part1() {
-        test_implementation(part1, REAL, 4917);
-    }
+    // 16059 correct
+    // #[test]
+    // fn real_part1() {
+    //     test_implementation(part1, REAL, 16059);
+    // }
 
-    #[test]
-    fn sample_part2() {
-        test_implementation(part2, SAMPLE, 3351);
-    }
+    // 44169 correct
+    // #[test]
+    // fn sample_part2() {
+    //     test_implementation(part2, SAMPLE, 44169);
+    // }
 
-    #[test]
-    fn real_part2() {
-        test_implementation(part2, REAL, 16389);
-    }
+    // 43117 correct
+    // #[test]
+    // fn real_part2() {
+    //     test_implementation(part2, REAL, 43117);
+    // }
 }
