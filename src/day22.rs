@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::io::Read;
+use std::time::Instant;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum InstructionKind {
@@ -208,19 +209,6 @@ fn overlap(cuboid: &Cuboid, other: &Cuboid) -> bool {
 }
 
 impl Grid {
-    fn find_overlaps(&self, cuboid: &Cuboid) -> Vec<&Cuboid> {
-        let mut overlaps = vec![];
-        for other in &self.cuboids {
-            let x_overlap = cuboid.x.0 <= other.x.1 && cuboid.x.1 >= other.x.0;
-            let y_overlap = cuboid.y.0 <= other.y.1 && cuboid.y.1 >= other.y.0;
-            let z_overlap = cuboid.z.0 <= other.z.1 && cuboid.z.1 >= other.z.0;
-            if x_overlap && y_overlap && z_overlap {
-                overlaps.push(other);
-            }
-        }
-        overlaps
-    }
-
     fn add_cuboid(&mut self, cuboid: Cuboid) {
         let mut new_cuboids = split_into_non_overlapping(&self.cuboids, &cuboid);
         self.cuboids.append(&mut new_cuboids);
