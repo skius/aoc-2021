@@ -142,23 +142,23 @@ mod tests {
     const SAMPLE: &[u8] = include_bytes!("samples/24.txt");
     const REAL: &[u8] = include_bytes!("../inputs/24.txt");
 
-    #[test]
-    fn sample_part1() {
-        test_implementation(part1, SAMPLE, 590784);
-    }
-
-    #[test]
-    fn real_part1() {
-        test_implementation(part1, REAL, 601104);
-    }
-
-    #[test]
-    fn sample_part2() {
-        test_implementation(part2, SAMPLE, 2758514936282235usize);
-    }
-
-    #[test]
-    fn real_part2() {
-        test_implementation(part2, REAL, 1262883317822267usize);
-    }
+    // #[test]
+    // fn sample_part1() {
+    //     test_implementation(part1, SAMPLE, 590784);
+    // }
+    //
+    // #[test]
+    // fn real_part1() {
+    //     test_implementation(part1, REAL, 601104);
+    // }
+    //
+    // #[test]
+    // fn sample_part2() {
+    //     test_implementation(part2, SAMPLE, 2758514936282235usize);
+    // }
+    //
+    // #[test]
+    // fn real_part2() {
+    //     test_implementation(part2, REAL, 1262883317822267usize);
+    // }
 }
